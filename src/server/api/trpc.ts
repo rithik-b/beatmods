@@ -6,7 +6,10 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
+import { env } from "@beatmods/env"
+import { type CookieOptions, createServerClient } from "@supabase/ssr"
 import { initTRPC } from "@trpc/server"
+import { cookies } from "next/headers";
 import superjson from "superjson"
 import { ZodError } from "zod"
 
@@ -22,9 +25,25 @@ import { ZodError } from "zod"
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: { headers: Headers }) => {
+export const createTRPCContext = async () => {
+  const cookieStore = cookies()
+  const supabase = createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_ADMIN_KEY, {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value
+      },
+      set(name: string, value: string, options: CookieOptions) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        cookieStore.set({ name, value, ...options })
+      },
+      remove(name: string, options: CookieOptions) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        cookieStore.set({ name, value: '', ...options })
+      },
+    },
+  })
   return {
-    ...opts,
+    supabase,
   }
 }
 
