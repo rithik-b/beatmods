@@ -2,14 +2,9 @@ import { api } from "@beatmods/trpc/server"
 import SignIn from "@beatmods/app/_components/SignIn"
 
 export default async function Home() {
-  let loggedIn = false
+  const user = await api.user.user.query()
 
-  try {
-    const user = await api.user.user.query()
-    loggedIn = !!user
-  } catch (error) {}
-
-  if (loggedIn) {
+  if (!!user) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-black text-white">
         <h1 className="text-4xl">Welcome back!</h1>
