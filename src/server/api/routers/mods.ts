@@ -2,7 +2,7 @@ import { type Database } from "@beatmods/types/supabase"
 import { authenticatedProcedure, createTRPCRouter } from "../trpc"
 import { createSlug } from "@beatmods/utils"
 import newModSchema from "@beatmods/types/newModSchema"
-import getSupabaseServiceRoleClient from "@beatmods/server/getSupaBaseServiceRoleClient"
+import getSupabaseServiceRoleClient from "@beatmods/server/getSupabaseServiceRoleClient"
 import { TRPCError } from "@trpc/server"
 
 const modsRouter = createTRPCRouter({
