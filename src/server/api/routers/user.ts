@@ -1,8 +1,8 @@
-import { createTRPCRouter, publicProcedure } from "../trpc"
+import { createTRPCRouter, authenticatedProcedure } from "../trpc"
 
 const userRouter = createTRPCRouter({
-user: publicProcedure.query(async ({ctx}) => {
-    return await ctx.supabase.auth.getUser()
+user: authenticatedProcedure.query(async ({ctx}) => {
+    return ctx.user
 })})
 
 export default userRouter

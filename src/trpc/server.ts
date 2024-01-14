@@ -19,7 +19,7 @@ import { transformer } from "./shared"
  * handling a tRPC call from a React Server Component.
  */
 const createContext = cache(() => {
-  return createTRPCContext()
+  return createTRPCContext(true)
 })
 
 export const api = createTRPCProxyClient<AppRouter>({
