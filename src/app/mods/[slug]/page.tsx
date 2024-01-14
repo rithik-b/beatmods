@@ -1,3 +1,4 @@
+import Contributors from "@beatmods/components/Contributors"
 import { api } from "@beatmods/trpc/server"
 
 export default async function ModDetails({
@@ -10,10 +11,10 @@ export default async function ModDetails({
     const mod = await api.mods.modBySlug.query(slug)
 
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center">
+      <main className="flex flex-col p-5">
         <h1 className="text-4xl">{mod.name}</h1>
+        <Contributors contributors={mod.contributors} />
         <p>{mod.more_info_url}</p>
-        <p>{mod.contributors[0]!.name}</p>
       </main>
     )
   } catch (e) {

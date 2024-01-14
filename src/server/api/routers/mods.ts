@@ -81,7 +81,7 @@ const modsRouter = createTRPCRouter({
         message: "Contributors not found",
       })
 
-    return { ...mod, contributors: contributors.map((c) => c.github_users) }
+    return { ...mod, contributors: contributors.map((c) => c.github_users!) }
   }),
 })
 
