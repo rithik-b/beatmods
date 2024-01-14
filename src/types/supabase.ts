@@ -46,6 +46,38 @@ export interface Database {
         }
         Relationships: []
       }
+      github_users: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          name: string | null
+          user_name: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          name?: string | null
+          user_name: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "github_users_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       mod_contributors: {
         Row: {
           id: string
@@ -74,7 +106,7 @@ export interface Database {
             foreignKeyName: "mod_contributors_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "github_users"
             referencedColumns: ["id"]
           }
         ]
