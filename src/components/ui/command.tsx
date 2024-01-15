@@ -3,8 +3,6 @@
 import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
-import { Search } from "lucide-react"
-
 import { cn } from "@beatmods/utils"
 import { Dialog, DialogContent } from "@beatmods/components/ui/dialog"
 
@@ -37,17 +35,11 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   )
 }
 
-interface CommandInputProps {
-  preInputChildren?: React.ReactNode
-}
-
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> &
-    CommandInputProps
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
   <div className="flex items-center gap-2 border-b px-3" cmdk-input-wrapper="">
-    {props.preInputChildren}
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
