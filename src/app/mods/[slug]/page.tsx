@@ -15,6 +15,11 @@ export default async function ModDetails({
         <h1 className="text-4xl">{mod.name}</h1>
         <Contributors contributors={mod.contributors} />
         <p>{mod.more_info_url}</p>
+        {!!mod.description ? (
+          <p>{mod.description}</p>
+        ) : (
+          <p className="font-light text-gray-400">No description.</p>
+        )}
       </main>
     )
   } catch (e) {
