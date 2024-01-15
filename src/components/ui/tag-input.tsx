@@ -63,7 +63,7 @@ const TagInput = <T,>({
         }
       />
       {popoverOpen && (
-        <CommandList className="absolute top-[50px] z-10 w-full">
+        <CommandList className="absolute top-[50px] z-10 w-full bg-card px-2 pb-2">
           {children}
         </CommandList>
       )}
