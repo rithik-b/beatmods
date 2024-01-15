@@ -52,10 +52,10 @@ const TagInput = <T,>({
             {value.map((v) => (
               <div
                 key={getLabel?.(v) ?? v}
-                className="flex flex-row items-center gap-0.5 rounded-full bg-accent px-2 py-1 text-sm"
+                className="flex flex-row items-center gap-0.5 rounded-full bg-primary px-2 py-1 text-sm text-primary-foreground"
                 onClick={() => onChange(value.filter((x) => x !== v))}
               >
-                <Cross2Icon className="h-3 w-3 transition-all hover:text-muted-foreground" />
+                <Cross2Icon className="h-3 w-3 transition-all hover:text-gray-300" />
                 <span>{getLabel?.(v) ?? v}</span>
               </div>
             ))}
