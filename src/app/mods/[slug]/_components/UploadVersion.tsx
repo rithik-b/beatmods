@@ -22,6 +22,7 @@ import { Input } from "@beatmods/components/ui/input"
 import type GameVersion from "@beatmods/types/GameVersion"
 import TagInput from "@beatmods/components/ui/tag-input"
 import { CommandItem } from "@beatmods/components/ui/command"
+import { useState } from "react"
 
 interface Props {
   modId: string
@@ -37,6 +38,8 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
       dependencies: [],
     },
   })
+  const [gameVersionInputValue, setGameVersionInputValue] = useState("")
+
   return (
     <Card>
       <CardHeader>
@@ -65,7 +68,12 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
                 <FormItem>
                   <FormLabel>Supported Game Versions*</FormLabel>
                   <FormControl>
-                    <TagInput {...field} placeholder="Game Versions">
+                    <TagInput
+                      {...field}
+                      placeholder="Game Versions"
+                      inputValue={gameVersionInputValue}
+                      setInputValue={setGameVersionInputValue}
+                    >
                       {gameVersions
                         .filter((v) => !field.value.includes(v.version))
                         .map((gameVersion) => (
@@ -73,8 +81,8 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
                             key={gameVersion.id}
                             value={gameVersion.version}
                             onSelect={(currentValue) => {
-                              if (field.value.includes(currentValue)) return
                               field.onChange([...field.value, currentValue])
+                              setGameVersionInputValue("")
                             }}
                           >
                             {gameVersion.version}

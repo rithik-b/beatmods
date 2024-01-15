@@ -11,6 +11,8 @@ interface BaseProps<T> {
   onChange: (value: T[]) => void
   getLabel?: (value: T) => string
   placeholder?: string
+  inputValue?: string
+  setInputValue?: (value: string) => void
 }
 
 interface GenericProps<T> extends BaseProps<T> {
@@ -25,6 +27,8 @@ const TagInput = <T,>({
   onChange,
   getLabel,
   placeholder,
+  inputValue,
+  setInputValue,
 }: PropsWithChildren<Props<T>>) => {
   const [popoverOpen, setPopoverOpen] = useState(false)
 
@@ -34,6 +38,8 @@ const TagInput = <T,>({
         placeholder={!value || value.length === 0 ? placeholder : undefined}
         onFocus={() => setPopoverOpen(true)}
         onBlur={() => setPopoverOpen(false)}
+        value={inputValue}
+        onValueChange={setInputValue}
         onKeyDown={(e) => {
           if (
             e.key === "Backspace" &&
