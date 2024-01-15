@@ -1,5 +1,6 @@
 import Contributors from "@beatmods/components/Contributors"
 import { api } from "@beatmods/trpc/server"
+import Versions from "./_components/Versions"
 
 export default async function ModDetails({
   params,
@@ -20,6 +21,7 @@ export default async function ModDetails({
         ) : (
           <p className="font-light text-gray-400">No description.</p>
         )}
+        <Versions modId={mod.id} />
       </main>
     )
   } catch (e) {

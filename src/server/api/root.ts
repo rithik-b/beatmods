@@ -9,14 +9,28 @@ import { TRPCError } from "@trpc/server"
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-    user: userRouter,
-    mods: modsRouter,
-    categories: publicProcedure.query(async ({ctx}) => {
-        const categories = await ctx.supabase.from("categories").select("name")
-        // TODO better error handling
-        if (categories.error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: categories.error.message })
-        return categories.data?.map(category => category.name)
-    }),
+  user: userRouter,
+  mods: modsRouter,
+  categories: publicProcedure.query(async ({ ctx }) => {
+    const categories = await ctx.supabase.from("categories").select("name")
+    // TODO better error handling
+    if (categories.error)
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: categories.error.message,
+      })
+    return categories.data?.map((category) => category.name)
+  }),
+  gameVersions: publicProcedure.query(async ({ ctx }) => {
+    const gameVersions = await ctx.supabase.from("game_versions").select("*")
+    // TODO better error handling
+    if (gameVersions.error)
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: gameVersions.error.message,
+      })
+    return gameVersions.data
+  }),
 })
 
 // export type definition of API
