@@ -1,6 +1,6 @@
 import { Command, CommandList } from "@beatmods/components/ui/command"
 import { Command as CommandPrimitive, useCommandState } from "cmdk"
-import { type PropsWithChildren, useState } from "react"
+import { type PropsWithChildren, useState, useRef } from "react"
 import { cn } from "@beatmods/utils"
 import { X } from "lucide-react"
 
@@ -29,6 +29,7 @@ const TagInput = <T,>({
   setInputValue,
 }: PropsWithChildren<Props<T>>) => {
   const [inputFocused, setInputFocused] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   return (
     <Command className="relative overflow-visible">
@@ -38,6 +39,7 @@ const TagInput = <T,>({
           inputFocused ? "ring-2 ring-ring ring-offset-2" : "",
         )}
         cmdk-input-wrapper=""
+        ref={inputRef}
       >
         {value.map((v) => (
           <div
@@ -60,7 +62,17 @@ const TagInput = <T,>({
         <CommandPrimitive.Input
           placeholder={!value || value.length === 0 ? placeholder : undefined}
           onFocus={() => setInputFocused(true)}
-          onBlur={() => setInputFocused(false)}
+          onBlur={() => {
+            // Have to do this so the tag input doesn't disappear when clicking on a suggestion
+            setTimeout(() => {
+              if (
+                inputRef.current &&
+                inputRef.current.contains(document.activeElement)
+              )
+                return
+              setInputFocused(false)
+            }, 250)
+          }}
           value={inputValue}
           onValueChange={setInputValue}
           className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
@@ -86,7 +98,7 @@ const TagInputSuggestions = ({ children }: PropsWithChildren) => {
   return (
     <CommandList
       className={cn(
-        "absolute top-[48px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2",
+        "absolute top-[50px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2",
         resultsCount === 0 ? "hidden" : "",
       )}
     >
