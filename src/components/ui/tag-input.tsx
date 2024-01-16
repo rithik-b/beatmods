@@ -1,8 +1,8 @@
 import { Command, CommandList } from "@beatmods/components/ui/command"
 import { Command as CommandPrimitive } from "cmdk"
 import { type PropsWithChildren, useState } from "react"
-import { Cross2Icon } from "@radix-ui/react-icons"
 import { cn } from "@beatmods/utils"
+import { X } from "lucide-react"
 
 interface BaseProps<T> {
   value: T[]
@@ -48,7 +48,10 @@ const TagInput = <T,>({
               className="cursor-pointer"
               onClick={() => onChange(value.filter((x) => x !== v))}
             >
-              <Cross2Icon className="h-3 w-3 transition-all hover:text-gray-300" />
+              <X
+                strokeWidth={3}
+                className="h-3 w-3 transition-all hover:text-gray-300"
+              />
               <span className="sr-only">Remove</span>
             </div>
             <span>{getLabel?.(v) ?? v}</span>
