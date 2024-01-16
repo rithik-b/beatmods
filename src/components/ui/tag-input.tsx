@@ -63,15 +63,12 @@ const TagInput = <T,>({
           placeholder={!value || value.length === 0 ? placeholder : undefined}
           onFocus={() => setInputFocused(true)}
           onBlur={() => {
-            // Have to do this so the tag input doesn't disappear when clicking on a suggestion
-            setTimeout(() => {
-              if (
-                inputRef.current &&
-                inputRef.current.contains(document.activeElement)
-              )
-                return
-              setInputFocused(false)
-            }, 250)
+            if (
+              inputRef.current &&
+              inputRef.current.contains(document.activeElement)
+            )
+              return
+            setInputFocused(false)
           }}
           value={inputValue}
           onValueChange={setInputValue}
@@ -101,6 +98,7 @@ const TagInputSuggestions = ({ children }: PropsWithChildren) => {
         "absolute top-[50px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2",
         resultsCount === 0 ? "hidden" : "",
       )}
+      onMouseDown={(e) => e.preventDefault()}
     >
       {children}
     </CommandList>
