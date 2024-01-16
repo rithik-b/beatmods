@@ -2,6 +2,7 @@ import { Command, CommandList } from "@beatmods/components/ui/command"
 import { Command as CommandPrimitive } from "cmdk"
 import { type PropsWithChildren, useState } from "react"
 import { Cross2Icon } from "@radix-ui/react-icons"
+import { cn } from "@beatmods/utils"
 
 interface BaseProps<T> {
   value: T[]
@@ -27,12 +28,15 @@ const TagInput = <T,>({
   inputValue,
   setInputValue,
 }: PropsWithChildren<Props<T>>) => {
-  const [popoverOpen, setPopoverOpen] = useState(false)
+  const [inputFocused, setInputFocused] = useState(false)
 
   return (
     <Command className="relative overflow-visible">
       <div
-        className="flex items-center gap-2 rounded-md border px-3"
+        className={cn(
+          "flex items-center gap-2 rounded-md border px-3",
+          inputFocused ? "ring-2 ring-ring ring-offset-2" : "",
+        )}
         cmdk-input-wrapper=""
       >
         {value.map((v) => (
@@ -52,8 +56,8 @@ const TagInput = <T,>({
         ))}
         <CommandPrimitive.Input
           placeholder={!value || value.length === 0 ? placeholder : undefined}
-          onFocus={() => setPopoverOpen(true)}
-          onBlur={() => setPopoverOpen(false)}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
           value={inputValue}
           onValueChange={setInputValue}
           className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
@@ -66,7 +70,7 @@ const TagInput = <T,>({
           }}
         />
       </div>
-      {popoverOpen && (value.length === 0 || inputValue !== "") && (
+      {inputFocused && (value.length === 0 || inputValue !== "") && (
         <CommandList className="absolute top-[48px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2">
           {children}
         </CommandList>
