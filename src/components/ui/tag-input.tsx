@@ -66,7 +66,7 @@ const TagInput = <T,>({
           }}
         />
       </div>
-      {popoverOpen && (
+      {popoverOpen && (value.length === 0 || inputValue !== "") && (
         <CommandList className="absolute top-[48px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2">
           {children}
         </CommandList>
