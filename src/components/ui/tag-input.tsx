@@ -34,7 +34,7 @@ const TagInput = <T,>({
     <Command className="relative overflow-visible">
       <div
         className={cn(
-          "flex items-center gap-2 rounded-md border px-3",
+          "flex items-center gap-2 rounded-md border px-3 ring-offset-background",
           inputFocused ? "ring-2 ring-ring ring-offset-2" : "",
         )}
         cmdk-input-wrapper=""
