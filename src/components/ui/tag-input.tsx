@@ -72,7 +72,7 @@ const TagInput = <T,>({
           }}
           value={inputValue}
           onValueChange={setInputValue}
-          className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-11 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
           onKeyDown={(e) => {
             if (
               e.key === "Backspace" &&
@@ -82,21 +82,31 @@ const TagInput = <T,>({
           }}
         />
       </div>
-      {inputFocused && (value.length === 0 || inputValue !== "") && (
-        <TagInputSuggestions>{children}</TagInputSuggestions>
-      )}
+      <TagInputSuggestions
+        className={
+          inputFocused && (value.length === 0 || inputValue !== "")
+            ? "running"
+            : "hidden"
+        }
+      >
+        {children}
+      </TagInputSuggestions>
     </Command>
   )
 }
 
-const TagInputSuggestions = ({ children }: PropsWithChildren) => {
+const TagInputSuggestions = ({
+  children,
+  className,
+}: PropsWithChildren<{ className?: string }>) => {
   const resultsCount = useCommandState((state) => state.filtered.count)
 
   return (
     <CommandList
       className={cn(
-        "absolute top-[50px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2",
-        resultsCount === 0 ? "hidden" : "",
+        "absolute top-[50px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2 duration-200 animate-in fade-in",
+        resultsCount !== 0 ? "running" : "hidden",
+        className,
       )}
       onMouseDown={(e) => e.preventDefault()}
     >
