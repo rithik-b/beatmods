@@ -28,8 +28,8 @@ export default function Contributors({ contributors }: Props) {
   const [first, ...rest] = contributors
 
   return (
-    <HoverCard>
-      <HoverCardTrigger className="w-fit transition-all hover:underline">
+    <HoverCard openDelay={100} closeDelay={100}>
+      <HoverCardTrigger className="w-fit cursor-default transition-all duration-200 hover:scale-105 hover:font-medium">
         <div className="flex w-fit flex-row items-center gap-1">
           <div className="flex flex-row items-center gap-0.5">
             <GithubAvatar githubUser={first!} size={8} key={first!.id} />
