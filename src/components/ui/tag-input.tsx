@@ -1,5 +1,5 @@
 import { Command, CommandList } from "@beatmods/components/ui/command"
-import { Command as CommandPrimitive } from "cmdk"
+import { Command as CommandPrimitive, useCommandState } from "cmdk"
 import { type PropsWithChildren, useState } from "react"
 import { cn } from "@beatmods/utils"
 import { X } from "lucide-react"
@@ -74,11 +74,24 @@ const TagInput = <T,>({
         />
       </div>
       {inputFocused && (value.length === 0 || inputValue !== "") && (
-        <CommandList className="absolute top-[48px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2">
-          {children}
-        </CommandList>
+        <TagInputSuggestions>{children}</TagInputSuggestions>
       )}
     </Command>
+  )
+}
+
+const TagInputSuggestions = ({ children }: PropsWithChildren) => {
+  const resultsCount = useCommandState((state) => state.filtered.count)
+
+  return (
+    <CommandList
+      className={cn(
+        "absolute top-[48px] z-10 w-full rounded-md border-b border-l border-r bg-card p-2",
+        resultsCount === 0 ? "hidden" : "",
+      )}
+    >
+      {children}
+    </CommandList>
   )
 }
 
