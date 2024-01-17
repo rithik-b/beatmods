@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <TRPCReactProvider cookies={cookies().toString()}>
         <body className={`font-sans ${GeistSans.className}`}>
           <ThemeProvider
@@ -26,6 +26,7 @@ export default function RootLayout({
             attribute="class"
             defaultTheme="system"
             enableSystem
+            disableTransitionOnChange
           >
             {children}
           </ThemeProvider>
