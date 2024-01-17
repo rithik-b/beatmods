@@ -5,14 +5,14 @@ import {
   publicProcedure,
 } from "@beatmods/server/api/trpc"
 import { createSlug } from "@beatmods/utils"
-import newModSchema from "@beatmods/types/newModSchema"
+import NewModSchema from "@beatmods/types/NewModSchema"
 import getSupabaseServiceRoleClient from "@beatmods/server/getSupabaseServiceRoleClient"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 
 const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
-    .input(newModSchema)
+    .input(NewModSchema)
     .mutation(async ({ ctx, input }) => {
       if (!input.description) input.description = undefined
 

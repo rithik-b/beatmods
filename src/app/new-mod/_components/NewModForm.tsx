@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { type z } from "zod"
 import { useForm } from "react-hook-form"
 import { api } from "@beatmods/trpc/react"
-import newModSchema from "@beatmods/types/newModSchema"
+import newModSchema from "@beatmods/types/NewModSchema"
 import {
   Select,
   SelectContent,

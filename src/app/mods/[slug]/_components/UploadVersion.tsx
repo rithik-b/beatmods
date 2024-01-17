@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@beatmods/components/ui/card"
-import newVersionSchema from "@beatmods/types/newVersionSchema"
+import NewVersionSchema from "@beatmods/types/NewVersionSchema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { type z } from "zod"
@@ -30,8 +30,8 @@ interface Props {
 }
 
 export default function UploadVersion({ modId, gameVersions }: Props) {
-  const form = useForm<z.infer<typeof newVersionSchema>>({
-    resolver: zodResolver(newVersionSchema),
+  const form = useForm<z.infer<typeof NewVersionSchema>>({
+    resolver: zodResolver(NewVersionSchema),
     defaultValues: {
       version: "",
       gameVersions: [],
@@ -69,7 +69,8 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
                   <FormLabel>Supported Game Versions*</FormLabel>
                   <FormControl>
                     <TagInput
-                      {...field}
+                      value={field.value}
+                      onChange={field.onChange}
                       placeholder="Game Versions"
                       inputValue={gameVersionInputValue}
                       setInputValue={setGameVersionInputValue}
