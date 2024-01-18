@@ -111,6 +111,42 @@ export interface Database {
           }
         ]
       }
+      mod_version_dependencies: {
+        Row: {
+          dependency_id: string
+          id: string
+          mod_id: string
+          semver: string
+        }
+        Insert: {
+          dependency_id: string
+          id?: string
+          mod_id: string
+          semver: string
+        }
+        Update: {
+          dependency_id?: string
+          id?: string
+          mod_id?: string
+          semver?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mod_version_dependencies_dependency_id_fkey"
+            columns: ["dependency_id"]
+            isOneToOne: false
+            referencedRelation: "mods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mod_version_dependencies_mod_id_fkey"
+            columns: ["mod_id"]
+            isOneToOne: false
+            referencedRelation: "mod_versions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       mod_version_supported_game_versions: {
         Row: {
           game_version_id: string | null
@@ -147,18 +183,21 @@ export interface Database {
       mod_versions: {
         Row: {
           created_at: string
+          download_url: string
           id: string
           mod_id: string
           version: string
         }
         Insert: {
           created_at?: string
+          download_url: string
           id?: string
           mod_id: string
           version: string
         }
         Update: {
           created_at?: string
+          download_url?: string
           id?: string
           mod_id?: string
           version?: string
