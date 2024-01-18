@@ -83,6 +83,38 @@ const modsRouter = createTRPCRouter({
 
     return { ...mod, contributors: contributors.map((c) => c.github_users!) }
   }),
+  // TODO look for lowest version that supports all game versions
+  getModsForGameVersions: publicProcedure
+    .input(z.array(z.string()))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from("mod_version_supported_game_versions")
+        .select("mod_versions(mod_id, version)")
+        .in("game_version_id", input)
+
+      // TODO better error handling
+      if (!!error)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        })
+
+      const mods = new Map<string, string[]>()
+      data.forEach(({ mod_versions }) => {
+        const modId = mod_versions?.mod_id
+        const version = mod_versions?.version
+
+        if (!modId || !version) return
+
+        if (mods.has(modId)) {
+          mods.get(modId)?.push(version)
+        } else {
+          mods.set(modId, [version])
+        }
+      })
+
+      return mods
+    }),
 })
 
 export default modsRouter

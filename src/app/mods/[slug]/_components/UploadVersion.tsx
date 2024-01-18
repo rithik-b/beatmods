@@ -23,6 +23,7 @@ import type GameVersion from "@beatmods/types/GameVersion"
 import TagInput from "@beatmods/components/ui/tag-input"
 import { CommandItem } from "@beatmods/components/ui/command"
 import { useState } from "react"
+import DependenciesEditor from "@beatmods/components/DependenciesEditor"
 
 interface Props {
   modId: string
@@ -39,6 +40,9 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
     },
   })
   const [gameVersionInputValue, setGameVersionInputValue] = useState("")
+  const [selectedGameVersionIds, setSelectedGameVersionIds] = useState<
+    string[]
+  >([])
 
   return (
     <Card>
@@ -70,19 +74,31 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
                   <FormControl>
                     <TagInput
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(value) => {
+                        field.onChange(value)
+                        setSelectedGameVersionIds(value)
+                      }}
                       placeholder="Game Versions"
                       inputValue={gameVersionInputValue}
                       setInputValue={setGameVersionInputValue}
+                      getLabel={(gameVersionId) =>
+                        gameVersions.find((v) => v.id === gameVersionId)!
+                          .version
+                      }
                     >
                       {gameVersions
-                        .filter((v) => !field.value.includes(v.version))
+                        .filter((v) => !field.value.includes(v.id))
                         .map((gameVersion) => (
                           <CommandItem
                             key={gameVersion.id}
                             value={gameVersion.version}
-                            onSelect={(currentValue) => {
-                              field.onChange([...field.value, currentValue])
+                            onSelect={() => {
+                              const newGameVersions = [
+                                ...field.value,
+                                gameVersion.id,
+                              ]
+                              field.onChange(newGameVersions)
+                              setSelectedGameVersionIds(newGameVersions)
                               setGameVersionInputValue("")
                             }}
                           >
@@ -90,6 +106,20 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
                           </CommandItem>
                         ))}
                     </TagInput>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="dependencies"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dependencies</FormLabel>
+                  <FormControl>
+                    <DependenciesEditor
+                      gameVersionIds={selectedGameVersionIds}
+                    />
                   </FormControl>
                 </FormItem>
               )}
