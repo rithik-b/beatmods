@@ -1,6 +1,7 @@
 import Contributors from "@beatmods/components/Contributors"
 import { api } from "@beatmods/trpc/server"
 import Versions from "./_components/Versions"
+import { getTRPCErrorFromUnknown } from "@trpc/server"
 
 export default async function ModDetails({
   params,
@@ -27,7 +28,7 @@ export default async function ModDetails({
   } catch (e) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center">
-        <p>Mod not found.</p>
+        <p>{getTRPCErrorFromUnknown(e).message}</p>
       </main>
     )
   }

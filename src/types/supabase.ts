@@ -246,7 +246,18 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      new_mod: {
+        Args: {
+          id: string
+          name: string
+          description: string
+          category: string
+          more_info_url: string
+          slug: string
+          user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
