@@ -30,7 +30,7 @@ export const createTRPCContext = async (isSSR?: boolean) => {
   const cookieStore = cookies()
   const supabase = createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
-    env.SUPABASE_ADMIN_KEY,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
