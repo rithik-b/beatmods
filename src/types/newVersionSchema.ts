@@ -2,7 +2,7 @@ import { valid } from "semver"
 import { z } from "zod"
 import Dependency from "./Dependency"
 
-export const NewVersionSchemaWithoutUploadUrl = z.object({
+export const NewVersionSchemaWithoutUploadPath = z.object({
   modId: z.string(),
   version: z.string().refine((v) => valid(v) !== null),
   gameVersions: z.array(z.string().uuid()).nonempty(),
@@ -10,6 +10,6 @@ export const NewVersionSchemaWithoutUploadUrl = z.object({
 })
 
 export default z.object({
-  ...NewVersionSchemaWithoutUploadUrl.shape,
-  uploadUrl: z.string().url(),
+  ...NewVersionSchemaWithoutUploadPath.shape,
+  uploadPath: z.string(),
 })

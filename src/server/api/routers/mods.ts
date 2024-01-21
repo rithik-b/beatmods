@@ -11,7 +11,7 @@ import getSupabaseServiceRoleClient from "@beatmods/server/getSupabaseServiceRol
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import NewVersionSchema, {
-  NewVersionSchemaWithoutUploadUrl,
+  NewVersionSchemaWithoutUploadPath,
 } from "@beatmods/types/NewVersionSchema"
 
 const modsRouter = createTRPCRouter({
@@ -120,14 +120,71 @@ const modsRouter = createTRPCRouter({
       return mods
     }),
   getUploadUrlForNewModVersion: modContributorProcedure
-    .input(NewVersionSchemaWithoutUploadUrl)
+    .input(NewVersionSchemaWithoutUploadPath)
     .mutation(async ({ ctx, input }) => {
       const { modId, version } = input
       const serviceRoleClient = getSupabaseServiceRoleClient()
       // TODO validation
       return await serviceRoleClient.storage
         .from("mods")
-        .createSignedUploadUrl(`${modId}/${version}.zip`)
+        .createSignedUploadUrl(`${modId}/${modId}_${version}.zip`)
+    }),
+  createNewModVersion: modContributorProcedure
+    .input(NewVersionSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { modId, version, gameVersions, dependencies, uploadPath } = input
+      const serviceRoleClient = getSupabaseServiceRoleClient()
+      const { data: downloadUrl } = serviceRoleClient.storage
+        .from("mods")
+        .getPublicUrl(uploadPath)
+
+      // TODO better error handling
+      const { data, error: versionsError } = await serviceRoleClient
+        .from("mod_versions")
+        .insert({
+          mod_id: modId,
+          version,
+          download_url: downloadUrl.publicUrl,
+        })
+        .select("id")
+      if (versionsError)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: versionsError.message,
+        })
+
+      // TODO better error handling
+      const { error: gameVersionsError } = await serviceRoleClient
+        .from("mod_version_supported_game_versions")
+        .insert(
+          gameVersions.map((gameVersion) => ({
+            mod_version_id: data[0]!.id,
+            game_version_id: gameVersion,
+          })),
+        )
+      if (gameVersionsError)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: gameVersionsError.message,
+        })
+
+      if (dependencies.length !== 0) {
+        // TODO better error handling
+        const { error: dependenciesError } = await serviceRoleClient
+          .from("mod_version_dependencies")
+          .insert(
+            dependencies.map((dependency) => ({
+              mod_versions_id: data[0]!.id,
+              dependency_id: dependency.id,
+              semver: dependency.version,
+            })),
+          )
+        if (dependenciesError)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: dependenciesError.message,
+          })
+      }
     }),
 })
 

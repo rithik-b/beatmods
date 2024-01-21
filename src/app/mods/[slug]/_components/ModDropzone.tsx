@@ -1,20 +1,13 @@
 import { cn } from "@beatmods/utils"
 import { FileWarning, FolderArchive, FolderUp } from "lucide-react"
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import { type FileRejection, useDropzone } from "react-dropzone"
 
 interface Props {
-  setFile: (file: File) => void
+  setFile: (file: File | undefined) => void
 }
 
-export default function ModDropzone({ setFile: onUpload }: Props) {
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      onUpload(acceptedFiles[0]!)
-    },
-    [onUpload],
-  )
-
+export default function ModDropzone({ setFile }: Props) {
   const validate = useCallback((file: File) => {
     if (file.size > 15 * 1024 * 1024) {
       return {
@@ -32,7 +25,6 @@ export default function ModDropzone({ setFile: onUpload }: Props) {
     getInputProps,
     isDragActive,
   } = useDropzone({
-    onDrop,
     maxFiles: 1,
     multiple: false,
     accept: {
@@ -40,6 +32,10 @@ export default function ModDropzone({ setFile: onUpload }: Props) {
     },
     validator: validate,
   })
+
+  useEffect(() => {
+    setFile(acceptedFiles?.[0])
+  }, [acceptedFiles, setFile])
 
   return (
     <div className="flex flex-col gap-2">

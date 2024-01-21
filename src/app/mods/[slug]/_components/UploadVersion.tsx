@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@beatmods/components/ui/card"
-import { NewVersionSchemaWithoutUploadUrl } from "@beatmods/types/NewVersionSchema"
+import { NewVersionSchemaWithoutUploadPath } from "@beatmods/types/NewVersionSchema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { type z } from "zod"
@@ -35,8 +35,8 @@ interface Props {
 }
 
 export default function UploadVersion({ modId, gameVersions }: Props) {
-  const form = useForm<z.infer<typeof NewVersionSchemaWithoutUploadUrl>>({
-    resolver: zodResolver(NewVersionSchemaWithoutUploadUrl),
+  const form = useForm<z.infer<typeof NewVersionSchemaWithoutUploadPath>>({
+    resolver: zodResolver(NewVersionSchemaWithoutUploadPath),
     defaultValues: {
       modId,
       version: "",
@@ -48,17 +48,27 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
   const [selectedGameVersionIds, setSelectedGameVersionIds] = useState<
     string[]
   >([])
-  const [modFile, setModFile] = useState<File | null>(null)
-  const { mutateAsync } = api.mods.getUploadUrlForNewModVersion.useMutation()
+  const [modFile, setModFile] = useState<File | undefined>(undefined)
+  const { mutateAsync: getUploadUrlAsync } =
+    api.mods.getUploadUrlForNewModVersion.useMutation()
+  const { mutateAsync: createNewModVersionAsync } =
+    api.mods.createNewModVersion.useMutation()
   const onSubmit = async (
-    data: z.infer<typeof NewVersionSchemaWithoutUploadUrl>,
+    formData: z.infer<typeof NewVersionSchemaWithoutUploadPath>,
   ) => {
-    const uploadUrl = await mutateAsync(data)
+    if (!modFile) return
+
+    const uploadUrl = await getUploadUrlAsync(formData)
     const supabase = getSupabaseBrowserClient()
 
-    const {} = await supabase.storage
+    const { data } = await supabase.storage
       .from("mods")
-      .uploadToSignedUrl(uploadUrl.data!.path, uploadUrl.data!.token, modFile!)
+      .uploadToSignedUrl(uploadUrl.data!.path, uploadUrl.data!.token, modFile)
+
+    await createNewModVersionAsync({
+      ...formData,
+      uploadPath: data!.path,
+    })
   }
 
   return (
@@ -145,7 +155,9 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
               )}
             />
             <ModDropzone setFile={setModFile} />
-            <Button type="submit">Upload</Button>
+            <Button type="submit" disabled={!modFile}>
+              Upload
+            </Button>
           </form>
         </Form>
       </CardContent>
