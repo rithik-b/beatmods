@@ -12,7 +12,7 @@ import { type CookieOptions, createServerClient } from "@supabase/ssr"
 import { TRPCError, initTRPC } from "@trpc/server"
 import { cookies } from "next/headers"
 import superjson from "superjson"
-import { ZodError } from "zod"
+import { ZodError, z } from "zod"
 
 /**
  * 1. CONTEXT
@@ -108,3 +108,29 @@ export const authenticatedProcedure = publicProcedure.use(async (opts) => {
     })
   return opts.next({ ctx: { ...opts.ctx, user: data.user } })
 })
+
+export const modContributorProcedure = authenticatedProcedure
+  .input(z.object({ modId: z.string() }))
+  .use(async (opts) => {
+    const { count, error } = await opts.ctx.supabase
+      .from("mod_contributors")
+      .select("", { count: "exact", head: true })
+      .eq("user_id", opts.ctx.user.id)
+      .eq("mod_id", opts.input.modId)
+      .single()
+
+    // TODO better error handling
+    if (!!error?.message)
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: error.message,
+      })
+
+    if (!count)
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "You are not a contributor to this mod.",
+      })
+
+    return opts.next(opts)
+  })

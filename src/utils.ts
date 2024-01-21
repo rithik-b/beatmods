@@ -1,5 +1,7 @@
+import { createBrowserClient } from "@supabase/ssr"
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { env } from "./env"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -21,4 +23,11 @@ export function getShortUsernameForAvatar(username: string): string {
     .map((p) => p[0])
     .join("")
     .substring(0, 2)
+}
+
+export function getSupabaseBrowserClient() {
+  return createBrowserClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  )
 }

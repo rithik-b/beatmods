@@ -2,6 +2,7 @@ import { type Database } from "@beatmods/types/supabase"
 import {
   authenticatedProcedure,
   createTRPCRouter,
+  modContributorProcedure,
   publicProcedure,
 } from "@beatmods/server/api/trpc"
 import { createSlug } from "@beatmods/utils"
@@ -9,6 +10,9 @@ import NewModSchema from "@beatmods/types/NewModSchema"
 import getSupabaseServiceRoleClient from "@beatmods/server/getSupabaseServiceRoleClient"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
+import NewVersionSchema, {
+  NewVersionSchemaWithoutUploadUrl,
+} from "@beatmods/types/NewVersionSchema"
 
 const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
@@ -114,6 +118,16 @@ const modsRouter = createTRPCRouter({
       })
 
       return mods
+    }),
+  getUploadUrlForNewModVersion: modContributorProcedure
+    .input(NewVersionSchemaWithoutUploadUrl)
+    .mutation(async ({ ctx, input }) => {
+      const { modId, version } = input
+      const serviceRoleClient = getSupabaseServiceRoleClient()
+      // TODO validation
+      return await serviceRoleClient.storage
+        .from("mods")
+        .createSignedUploadUrl(`${modId}/${version}.zip`)
     }),
 })
 

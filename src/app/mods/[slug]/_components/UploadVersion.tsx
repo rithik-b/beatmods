@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@beatmods/components/ui/card"
-import NewVersionSchema from "@beatmods/types/NewVersionSchema"
+import { NewVersionSchemaWithoutUploadUrl } from "@beatmods/types/NewVersionSchema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { type z } from "zod"
@@ -24,6 +24,10 @@ import TagInput from "@beatmods/components/ui/tag-input"
 import { CommandItem } from "@beatmods/components/ui/command"
 import { useState } from "react"
 import DependenciesEditor from "@beatmods/components/DependenciesEditor"
+import { Button } from "@beatmods/components/ui/button"
+import { api } from "@beatmods/trpc/react"
+import ModDropzone from "./ModDropzone"
+import { getSupabaseBrowserClient } from "@beatmods/utils"
 
 interface Props {
   modId: string
@@ -31,9 +35,10 @@ interface Props {
 }
 
 export default function UploadVersion({ modId, gameVersions }: Props) {
-  const form = useForm<z.infer<typeof NewVersionSchema>>({
-    resolver: zodResolver(NewVersionSchema),
+  const form = useForm<z.infer<typeof NewVersionSchemaWithoutUploadUrl>>({
+    resolver: zodResolver(NewVersionSchemaWithoutUploadUrl),
     defaultValues: {
+      modId,
       version: "",
       gameVersions: [],
       dependencies: [],
@@ -43,6 +48,18 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
   const [selectedGameVersionIds, setSelectedGameVersionIds] = useState<
     string[]
   >([])
+  const [modFile, setModFile] = useState<File | null>(null)
+  const { mutateAsync } = api.mods.getUploadUrlForNewModVersion.useMutation()
+  const onSubmit = async (
+    data: z.infer<typeof NewVersionSchemaWithoutUploadUrl>,
+  ) => {
+    const uploadUrl = await mutateAsync(data)
+    const supabase = getSupabaseBrowserClient()
+
+    const {} = await supabase.storage
+      .from("mods")
+      .uploadToSignedUrl(uploadUrl.data!.path, uploadUrl.data!.token, modFile!)
+  }
 
   return (
     <Card>
@@ -52,7 +69,10 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form className="flex flex-col gap-5">
+          <form
+            className="flex flex-col gap-5"
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
             <FormField
               control={form.control}
               name="version"
@@ -124,6 +144,8 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
                 </FormItem>
               )}
             />
+            <ModDropzone setFile={setModFile} />
+            <Button type="submit">Upload</Button>
           </form>
         </Form>
       </CardContent>
