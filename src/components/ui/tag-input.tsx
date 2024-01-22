@@ -30,7 +30,7 @@ const TagInput = <T,>({
   setInputValue,
   hasError,
 }: PropsWithChildren<Props<T>>) => {
-  const [inputFocused, setInputFocused] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   return (
@@ -38,7 +38,7 @@ const TagInput = <T,>({
       <div
         className={cn(
           "flex items-center gap-2 rounded-md border px-3 ring-offset-background",
-          inputFocused ? "ring-2 ring-ring ring-offset-2" : "",
+          isFocused ? "ring-2 ring-ring ring-offset-2" : "",
           hasError ? "border-destructive ring-destructive" : "",
         )}
         cmdk-input-wrapper=""
@@ -64,14 +64,14 @@ const TagInput = <T,>({
         ))}
         <CommandPrimitive.Input
           placeholder={!value || value.length === 0 ? placeholder : undefined}
-          onFocus={() => setInputFocused(true)}
+          onFocus={() => setIsFocused(true)}
           onBlur={() => {
             if (
               inputRef.current &&
               inputRef.current.contains(document.activeElement)
             )
               return
-            setInputFocused(false)
+            setIsFocused(false)
           }}
           value={inputValue}
           onValueChange={setInputValue}
@@ -87,7 +87,7 @@ const TagInput = <T,>({
       </div>
       <TagInputSuggestions
         className={
-          inputFocused && (value.length === 0 || inputValue !== "")
+          isFocused && (value.length === 0 || inputValue !== "")
             ? "running"
             : "hidden"
         }

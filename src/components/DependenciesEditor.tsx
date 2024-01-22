@@ -1,10 +1,20 @@
 import { api } from "@beatmods/trpc/react"
-import Editor, { useMonaco } from "@monaco-editor/react"
+import Editor, { type OnValidate, useMonaco } from "@monaco-editor/react"
 import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { type editor } from "monaco-editor"
+import { cn } from "@beatmods/utils"
+import { type z } from "zod"
+import type Dependency from "@beatmods/types/Dependency"
 
 interface Props {
   gameVersionIds: string[]
+  hasError?: boolean
+  value?: z.infer<typeof Dependency>[]
+  onChange?: (value: z.infer<typeof Dependency>[]) => void
+  onValidate?: OnValidate
+  onFocus?: () => void
+  onBlur?: () => void
 }
 
 function getSchemaPropertiesFromModVersions(
@@ -20,20 +30,49 @@ function getSchemaPropertiesFromModVersions(
   return properties
 }
 
+function convertDependenciesToEditorValue(
+  dependencies: z.infer<typeof Dependency>[],
+) {
+  if (dependencies.length === 0) return "{\n    \n}"
+
+  const dependenciesObject: Record<string, string> = {}
+  for (const dependency of dependencies) {
+    dependenciesObject[dependency.id] = dependency.version
+  }
+  return JSON.stringify(dependenciesObject, null, 4)
+}
+
+function convertEditorValueToDependencies(editorValue: string) {
+  const dependenciesObject = JSON.parse(editorValue) as Record<string, string>
+  const dependencies: z.infer<typeof Dependency>[] = []
+  for (const dependency of Object.entries(dependenciesObject)) {
+    dependencies.push({ id: dependency[0], version: dependency[1] })
+  }
+  return dependencies
+}
+
 export default function DependenciesEditor({
-  gameVersionIds: gameVersions,
+  gameVersionIds,
+  hasError,
+  value,
+  onChange,
+  onValidate,
+  onFocus,
+  onBlur,
 }: Props) {
-  const { data } = api.mods.getModsForGameVersions.useQuery(gameVersions, {
-    enabled: gameVersions.length > 0,
+  const { data } = api.mods.getModsForGameVersions.useQuery(gameVersionIds, {
+    enabled: gameVersionIds.length > 0,
     refetchOnMount: false,
   })
 
   const monaco = useMonaco()
   const { resolvedTheme } = useTheme()
   const [hasSetTheme, setHasSetTheme] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
+  const [editorValue, setEditorValue] = useState<string | undefined>("")
 
   useEffect(() => {
-    if (!monaco || (!data && gameVersions.length > 0)) return
+    if (!monaco || (!data && gameVersionIds.length > 0)) return
 
     monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
       validate: true,
@@ -66,14 +105,55 @@ export default function DependenciesEditor({
     setHasSetTheme(true)
   }, [monaco])
 
+  const onEditorMount = useCallback(
+    (editor: editor.IStandaloneCodeEditor) => {
+      editor.onDidFocusEditorText(() => {
+        setIsFocused(true)
+        if (!!onFocus) onFocus()
+      })
+
+      editor.onDidBlurEditorText(() => {
+        setIsFocused(false)
+        if (!!onBlur) onBlur()
+      })
+    },
+    [onBlur, onFocus],
+  )
+
+  // Only update the editor value if the value prop changes when unfocused
+  useEffect(() => {
+    if (!value || isFocused) return
+    setEditorValue(convertDependenciesToEditorValue(value))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+
+  const onValidateInternal: OnValidate = useCallback(
+    (markers) => {
+      if (!!onValidate) onValidate(markers)
+
+      if (markers.length === 0 && !!onChange && !!editorValue)
+        onChange(convertEditorValueToDependencies(editorValue))
+    },
+    [editorValue, onChange, onValidate],
+  )
+
   return (
-    <div className="h-[200px] w-full rounded-md border py-2 pr-1">
+    <div
+      className={cn(
+        "h-[200px] w-full rounded-md border py-2 pr-1 ring-offset-background",
+        isFocused ? "ring-2 ring-ring ring-offset-2" : "",
+        hasError ? "border-destructive ring-destructive" : "",
+      )}
+    >
       {hasSetTheme && (
         <Editor
           defaultLanguage="json"
           defaultValue={"{\n    \n}"}
           theme={resolvedTheme === "dark" ? "dark" : "light"}
-          onValidate={(markers) => console.log(markers)}
+          onValidate={onValidateInternal}
+          onMount={onEditorMount}
+          value={editorValue}
+          onChange={setEditorValue}
           options={{
             scrollBeyondLastLine: false,
             minimap: { enabled: false },

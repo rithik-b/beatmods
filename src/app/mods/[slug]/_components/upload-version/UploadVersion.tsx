@@ -17,16 +17,17 @@ import {
   FormItem,
   FormLabel,
   Form,
+  FormMessage,
 } from "@beatmods/components/ui/form"
 import { Input } from "@beatmods/components/ui/input"
 import type GameVersion from "@beatmods/types/GameVersion"
-import { useState } from "react"
-import DependenciesEditor from "@beatmods/components/DependenciesEditor"
+import { useMemo, useState } from "react"
 import { Button } from "@beatmods/components/ui/button"
 import { api } from "@beatmods/trpc/react"
 import ModDropzone from "./ModDropzone"
 import { getSupabaseBrowserClient } from "@beatmods/utils"
 import GameVersionInput from "./GameVersionInput"
+import DependenciesEditor from "./DependenciesEditor"
 
 interface Props {
   modId: string
@@ -42,7 +43,7 @@ export default function UploadVersion({
     defaultValues: {
       modId,
       version: "",
-      gameVersions: [],
+      supportedGameVersionIds: [],
       dependencies: [],
     },
   })
@@ -72,6 +73,10 @@ export default function UploadVersion({
       uploadPath: data!.path,
     })
   }
+  const hasErrors = useMemo(
+    () => Object.keys(form.formState.errors).length > 0,
+    [form.formState.errors],
+  )
 
   return (
     <Card>
@@ -94,12 +99,13 @@ export default function UploadVersion({
                   <FormControl>
                     <Input placeholder="1.0.0" {...field} autoComplete="off" />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="gameVersions"
+              name="supportedGameVersionIds"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Supported Game Versions*</FormLabel>
@@ -113,6 +119,7 @@ export default function UploadVersion({
                       allGameVersions={allGameVersions}
                     />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -125,13 +132,20 @@ export default function UploadVersion({
                   <FormControl>
                     <DependenciesEditor
                       gameVersionIds={selectedGameVersionIds}
+                      value={field.value}
+                      onChange={field.onChange}
                     />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
             <ModDropzone setFile={setModFile} />
-            <Button type="submit" disabled={!modFile}>
+            <Button
+              type="submit"
+              disabled={!modFile || hasErrors}
+              isLoading={form.formState.isSubmitting}
+            >
               Upload
             </Button>
           </form>

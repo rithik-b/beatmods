@@ -122,7 +122,13 @@ const modsRouter = createTRPCRouter({
   createNewModVersion: modContributorProcedure
     .input(NewVersionSchema)
     .mutation(async ({ ctx, input }) => {
-      const { modId, version, gameVersions, dependencies, uploadPath } = input
+      const {
+        modId,
+        version,
+        supportedGameVersionIds,
+        dependencies,
+        uploadPath,
+      } = input
       const serviceRoleClient = getSupabaseServiceRoleClient()
       const { data: downloadUrl } = serviceRoleClient.storage
         .from("mods")
@@ -147,9 +153,9 @@ const modsRouter = createTRPCRouter({
       const { error: gameVersionsError } = await serviceRoleClient
         .from("mod_version_supported_game_versions")
         .insert(
-          gameVersions.map((gameVersion) => ({
+          supportedGameVersionIds.map((gameVersionId) => ({
             mod_version_id: data[0]!.id,
-            game_version_id: gameVersion,
+            game_version_id: gameVersionId,
           })),
         )
       if (gameVersionsError)
