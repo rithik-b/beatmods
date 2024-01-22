@@ -38,7 +38,7 @@ export default function NewModForm({ categories }: Props) {
       category: categories[0],
     },
   })
-  const { mutateAsync, isLoading } = api.mods.createNew.useMutation()
+  const { mutateAsync } = api.mods.createNew.useMutation()
 
   function onSubmit(values: z.infer<typeof newModSchema>) {
     return mutateAsync(values)
@@ -125,7 +125,11 @@ export default function NewModForm({ categories }: Props) {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isLoading} className="w-full">
+        <Button
+          type="submit"
+          isLoading={form.formState.isSubmitting}
+          className="w-full"
+        >
           Create
         </Button>
       </form>

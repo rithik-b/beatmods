@@ -18,13 +18,12 @@ const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
     .input(NewModSchema)
     .mutation(async ({ ctx, input }) => {
-      if (!input.description) input.description = undefined
       const serviceRoleClient = getSupabaseServiceRoleClient()
 
       const { error } = await serviceRoleClient.rpc("new_mod", {
         id: input.id,
         name: input.name,
-        description: input.description!,
+        description: !input.description ? null! : input.description,
         category: input.category,
         more_info_url: input.moreInfoUrl,
         slug: createSlug(input.id),
