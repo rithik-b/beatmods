@@ -57,7 +57,7 @@ export default function NewModForm({ categories }: Props) {
             <FormItem>
               <FormLabel>ID*</FormLabel>
               <FormControl>
-                <Input placeholder="SongCore" {...field} />
+                <Input placeholder="SongCore" {...field} autoComplete="off" />
               </FormControl>
               <FormDescription>This is the BSIPA Mod ID</FormDescription>
             </FormItem>
@@ -70,7 +70,7 @@ export default function NewModForm({ categories }: Props) {
             <FormItem>
               <FormLabel>Name*</FormLabel>
               <FormControl>
-                <Input placeholder="SongCore" {...field} />
+                <Input placeholder="SongCore" {...field} autoComplete="off" />
               </FormControl>
             </FormItem>
           )}
@@ -82,7 +82,7 @@ export default function NewModForm({ categories }: Props) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input placeholder="optional" {...field} />
+                <Input placeholder="optional" {...field} autoComplete="off" />
               </FormControl>
             </FormItem>
           )}
@@ -94,7 +94,7 @@ export default function NewModForm({ categories }: Props) {
             <FormItem>
               <FormLabel>More Info Link*</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} autoComplete="off" />
               </FormControl>
               <FormDescription>
                 E.g. link to the mod&apos;s repo

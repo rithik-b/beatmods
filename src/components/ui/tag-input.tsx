@@ -11,6 +11,7 @@ interface BaseProps<T> {
   placeholder?: string
   inputValue?: string
   setInputValue?: (value: string) => void
+  hasError?: boolean
 }
 
 interface GenericProps<T> extends BaseProps<T> {
@@ -27,6 +28,7 @@ const TagInput = <T,>({
   placeholder,
   inputValue,
   setInputValue,
+  hasError,
 }: PropsWithChildren<Props<T>>) => {
   const [inputFocused, setInputFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -37,6 +39,7 @@ const TagInput = <T,>({
         className={cn(
           "flex items-center gap-2 rounded-md border px-3 ring-offset-background",
           inputFocused ? "ring-2 ring-ring ring-offset-2" : "",
+          hasError ? "border-destructive ring-destructive" : "",
         )}
         cmdk-input-wrapper=""
         ref={inputRef}

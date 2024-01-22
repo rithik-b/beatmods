@@ -1,5 +1,5 @@
 import { api } from "@beatmods/trpc/server"
-import UploadVersion from "./UploadVersion"
+import UploadVersion from "./upload-version/UploadVersion"
 
 interface Props {
   modId: string

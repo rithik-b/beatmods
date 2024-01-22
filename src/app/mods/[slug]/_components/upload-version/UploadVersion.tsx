@@ -20,21 +20,23 @@ import {
 } from "@beatmods/components/ui/form"
 import { Input } from "@beatmods/components/ui/input"
 import type GameVersion from "@beatmods/types/GameVersion"
-import TagInput from "@beatmods/components/ui/tag-input"
-import { CommandItem } from "@beatmods/components/ui/command"
 import { useState } from "react"
 import DependenciesEditor from "@beatmods/components/DependenciesEditor"
 import { Button } from "@beatmods/components/ui/button"
 import { api } from "@beatmods/trpc/react"
 import ModDropzone from "./ModDropzone"
 import { getSupabaseBrowserClient } from "@beatmods/utils"
+import GameVersionInput from "./GameVersionInput"
 
 interface Props {
   modId: string
   gameVersions: GameVersion[]
 }
 
-export default function UploadVersion({ modId, gameVersions }: Props) {
+export default function UploadVersion({
+  modId,
+  gameVersions: allGameVersions,
+}: Props) {
   const form = useForm<z.infer<typeof NewVersionSchemaWithoutUploadPath>>({
     resolver: zodResolver(NewVersionSchemaWithoutUploadPath),
     defaultValues: {
@@ -44,7 +46,6 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
       dependencies: [],
     },
   })
-  const [gameVersionInputValue, setGameVersionInputValue] = useState("")
   const [selectedGameVersionIds, setSelectedGameVersionIds] = useState<
     string[]
   >([])
@@ -53,6 +54,7 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
     api.mods.getUploadUrlForNewModVersion.useMutation()
   const { mutateAsync: createNewModVersionAsync } =
     api.mods.createNewModVersion.useMutation()
+
   const onSubmit = async (
     formData: z.infer<typeof NewVersionSchemaWithoutUploadPath>,
   ) => {
@@ -90,7 +92,7 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
                 <FormItem>
                   <FormLabel>Version*</FormLabel>
                   <FormControl>
-                    <Input placeholder="1.0.0" {...field} />
+                    <Input placeholder="1.0.0" {...field} autoComplete="off" />
                   </FormControl>
                 </FormItem>
               )}
@@ -102,40 +104,14 @@ export default function UploadVersion({ modId, gameVersions }: Props) {
                 <FormItem>
                   <FormLabel>Supported Game Versions*</FormLabel>
                   <FormControl>
-                    <TagInput
+                    <GameVersionInput
                       value={field.value}
-                      onChange={(value) => {
-                        field.onChange(value)
-                        setSelectedGameVersionIds(value)
+                      onChange={(newGameVersionIds) => {
+                        field.onChange(newGameVersionIds)
+                        setSelectedGameVersionIds(newGameVersionIds)
                       }}
-                      placeholder="Game Versions"
-                      inputValue={gameVersionInputValue}
-                      setInputValue={setGameVersionInputValue}
-                      getLabel={(gameVersionId) =>
-                        gameVersions.find((v) => v.id === gameVersionId)!
-                          .version
-                      }
-                    >
-                      {gameVersions
-                        .filter((v) => !field.value.includes(v.id))
-                        .map((gameVersion) => (
-                          <CommandItem
-                            key={gameVersion.id}
-                            value={gameVersion.version}
-                            onSelect={() => {
-                              const newGameVersions = [
-                                ...field.value,
-                                gameVersion.id,
-                              ]
-                              field.onChange(newGameVersions)
-                              setSelectedGameVersionIds(newGameVersions)
-                              setGameVersionInputValue("")
-                            }}
-                          >
-                            {gameVersion.version}
-                          </CommandItem>
-                        ))}
-                    </TagInput>
+                      allGameVersions={allGameVersions}
+                    />
                   </FormControl>
                 </FormItem>
               )}

@@ -39,15 +39,15 @@ export default function ModDropzone({ setFile }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="h-4 text-sm font-medium text-red-500 transition-all">
+      <span className="h-4 text-sm font-medium text-destructive transition-all">
         {fileRejections.length > 0 && fileRejections[0]!.errors[0]!.message}
       </span>
 
       <div
         className={cn(
-          "flex cursor-pointer justify-center rounded-md border p-5 transition-colors hover:border-foreground",
+          "flex cursor-pointer justify-center rounded-md border p-5 transition-all hover:border-foreground hover:font-medium",
           fileRejections.length > 0 &&
-            "border-destructive hover:border-red-500 hover:dark:border-red-500",
+            "border-destructive hover:border-red-600 hover:dark:border-red-500",
         )}
         {...getRootProps()}
       >
@@ -81,8 +81,8 @@ function DropzoneContents(props: DropzoneContentsProps) {
   if (fileRejections.length > 0)
     return (
       <>
-        <FileWarning className="text-red-500" />
-        <span className="text-red-500">{fileRejections[0]!.file.name}</span>
+        <FileWarning className="text-destructive" />
+        <span className="text-destructive">{fileRejections[0]!.file.name}</span>
       </>
     )
 
