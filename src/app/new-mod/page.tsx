@@ -11,12 +11,12 @@ export default async function NewMod() {
   const categories = await api.categories.query()
 
   return (
-    <main className="p-5">
+    <div className="p-5">
       {isLogged ? (
         <NewModForm categories={categories} />
       ) : (
         <p>You must be signed in to create a new mod.</p>
       )}
-    </main>
+    </div>
   )
 }

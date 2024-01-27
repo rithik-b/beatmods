@@ -29,10 +29,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="flex h-full flex-row">
+            <main className="flex h-full flex-row">
               <Sidebar />
-              <div className="h-full w-full border-l">{children}</div>
-            </div>
+              <section className="h-full w-full border-l">{children}</section>
+            </main>
           </ThemeProvider>
         </body>
       </TRPCReactProvider>

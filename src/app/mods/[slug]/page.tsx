@@ -13,8 +13,8 @@ export default async function ModDetails({
     const mod = await api.mods.modBySlug.query(slug)
 
     return (
-      <main className="flex flex-col p-5">
         <h1 className="text-4xl">{mod.name}</h1>
+      <div className="flex h-full flex-col gap-2 p-5">
         <Contributors contributors={mod.contributors} />
         <p>{mod.more_info_url}</p>
         {!!mod.description ? (
@@ -23,13 +23,13 @@ export default async function ModDetails({
           <p className="font-light text-gray-400">No description.</p>
         )}
         <Versions modId={mod.id} />
-      </main>
+      </div>
     )
   } catch (e) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center">
+      <div className="flex h-full flex-col items-center justify-center">
         <p>{getTRPCErrorFromUnknown(e).message}</p>
-      </main>
+      </div>
     )
   }
 }
