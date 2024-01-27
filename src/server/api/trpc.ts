@@ -99,14 +99,17 @@ export const createTRPCRouter = t.router
 export const publicProcedure = t.procedure
 
 export const authenticatedProcedure = publicProcedure.use(async (opts) => {
-  const { error, data } = await opts.ctx.supabase.auth.getUser()
+  const { error, data } = await opts.ctx.supabase.rpc("get_current_user")
   // TODO better error handling
-  if (!!error || !data.user)
+  if (!!error || !data?.[0])
     throw new TRPCError({
-      code: error?.status === 401 ? "FORBIDDEN" : "BAD_REQUEST",
+      code:
+        error?.code === "invalid_token"
+          ? "UNAUTHORIZED"
+          : "INTERNAL_SERVER_ERROR",
       message: error?.message,
     })
-  return opts.next({ ctx: { ...opts.ctx, user: data.user } })
+  return opts.next({ ctx: { ...opts.ctx, user: data[0] } })
 })
 
 export const modContributorProcedure = authenticatedProcedure
