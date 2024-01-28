@@ -21,7 +21,7 @@ import {
   modVersions,
   mods,
 } from "@beatmods/types/autogen/drizzle"
-import { eq, max } from "drizzle-orm"
+import { and, eq, max, sql } from "drizzle-orm"
 
 const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
@@ -189,88 +189,105 @@ const modsRouter = createTRPCRouter({
           })
       }
     }),
-  getModsForListing: publicProcedure.query(async () => {
-    const unAggregatedMods = await drizzleClient
-      .select({
-        id: mods.id,
-        name: mods.name,
-        slug: mods.slug,
-        category: mods.category,
-        contributor: githubUsers,
-        supportedGameVersion: gameVersions.version,
-        latestVersion: max(modVersions.version),
-      })
-      .from(mods)
-      .leftJoin(modContributors, eq(modContributors.modId, mods.id))
-      .leftJoin(githubUsers, eq(githubUsers.id, modContributors.userId))
-      .leftJoin(modVersions, eq(modVersions.modId, mods.id))
-      .leftJoin(
-        modVersionSupportedGameVersions,
-        eq(modVersionSupportedGameVersions.modVersionId, modVersions.id),
-      )
-      .leftJoin(
-        gameVersions,
-        eq(gameVersions.id, modVersionSupportedGameVersions.gameVersionId),
-      )
-      .groupBy(mods.id, githubUsers.id, gameVersions.id)
+  getModsForListing: publicProcedure
+    .input(
+      z.object({
+        gameVersion: z.string(),
+        search: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { gameVersion, search } = input
+      const unAggregatedMods = await drizzleClient
+        .select({
+          id: mods.id,
+          name: mods.name,
+          slug: mods.slug,
+          category: mods.category,
+          contributor: githubUsers,
+          supportedGameVersion: gameVersions.version,
+          latestVersion: max(modVersions.version),
+        })
+        .from(mods)
+        .leftJoin(modContributors, eq(modContributors.modId, mods.id))
+        .leftJoin(githubUsers, eq(githubUsers.id, modContributors.userId))
+        .leftJoin(modVersions, eq(modVersions.modId, mods.id))
+        .leftJoin(
+          modVersionSupportedGameVersions,
+          eq(modVersionSupportedGameVersions.modVersionId, modVersions.id),
+        )
+        .leftJoin(
+          gameVersions,
+          eq(gameVersions.id, modVersionSupportedGameVersions.gameVersionId),
+        )
+        .where(
+          and(
+            eq(gameVersions.version, gameVersion),
+            // TODO improve search
+            !!search
+              ? sql`${search} % ANY(STRING_TO_ARRAY(${mods.name},' '))`
+              : sql`TRUE`,
+          ),
+        )
+        .groupBy(mods.id, githubUsers.id, gameVersions.id)
 
-    const aggregatedMods = unAggregatedMods.reduce(
-      (acc, mod) => {
-        const {
-          id,
-          name,
-          slug,
-          category,
-          latestVersion,
-          contributor,
-          supportedGameVersion,
-        } = mod
-
-        const existingMod = acc.get(id)
-
-        if (!!existingMod) {
-          existingMod.contributors = !!contributor
-            ? [...existingMod.contributors, contributor]
-            : existingMod.contributors
-
-          existingMod.supportedGameVersions = !!supportedGameVersion
-            ? [...existingMod.supportedGameVersions, supportedGameVersion]
-            : existingMod.supportedGameVersions
-        } else {
-          acc.set(id, {
+      const aggregatedMods = unAggregatedMods.reduce(
+        (acc, mod) => {
+          const {
             id,
             name,
             slug,
             category,
             latestVersion,
-            contributors: !!contributor ? [contributor] : [],
-            supportedGameVersions: !!supportedGameVersion
-              ? [supportedGameVersion]
-              : [],
-          })
-        }
-        return acc
-      },
-      new Map<
-        string,
-        Omit<
-          (typeof unAggregatedMods)[0],
-          "contributor" | "supportedGameVersion" | "version"
-        > & {
-          contributors: Exclude<
-            (typeof unAggregatedMods)[0]["contributor"],
-            null
-          >[]
-          supportedGameVersions: Exclude<
-            (typeof unAggregatedMods)[0]["supportedGameVersion"],
-            null
-          >[]
-        }
-      >(),
-    )
+            contributor,
+            supportedGameVersion,
+          } = mod
 
-    return Array.from(aggregatedMods.values())
-  }),
+          const existingMod = acc.get(id)
+
+          if (!!existingMod) {
+            existingMod.contributors = !!contributor
+              ? [...existingMod.contributors, contributor]
+              : existingMod.contributors
+
+            existingMod.supportedGameVersions = !!supportedGameVersion
+              ? [...existingMod.supportedGameVersions, supportedGameVersion]
+              : existingMod.supportedGameVersions
+          } else {
+            acc.set(id, {
+              id,
+              name,
+              slug,
+              category,
+              latestVersion,
+              contributors: !!contributor ? [contributor] : [],
+              supportedGameVersions: !!supportedGameVersion
+                ? [supportedGameVersion]
+                : [],
+            })
+          }
+          return acc
+        },
+        new Map<
+          string,
+          Omit<
+            (typeof unAggregatedMods)[0],
+            "contributor" | "supportedGameVersion" | "version"
+          > & {
+            contributors: Exclude<
+              (typeof unAggregatedMods)[0]["contributor"],
+              null
+            >[]
+            supportedGameVersions: Exclude<
+              (typeof unAggregatedMods)[0]["supportedGameVersion"],
+              null
+            >[]
+          }
+        >(),
+      )
+
+      return Array.from(aggregatedMods.values())
+    }),
 })
 
 export default modsRouter

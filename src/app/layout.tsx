@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 
 import { TRPCReactProvider } from "@beatmods/trpc/react"
 import { GeistSans } from "geist/font/sans"
-import { ThemeProvider } from "@beatmods/components/ThemeProvider"
+import { Providers } from "@beatmods/components/Providers"
 import Sidebar from "./_components/Sidebar"
 
 export const metadata = {
@@ -14,7 +14,6 @@ export const metadata = {
 
 export default function RootLayout({
   children,
-  ...props
 }: {
   children: React.ReactNode
 }) {
@@ -22,13 +21,7 @@ export default function RootLayout({
     <html lang="en" className="h-full" suppressHydrationWarning>
       <TRPCReactProvider cookies={cookies().toString()}>
         <body className={`font-sans ${GeistSans.className} h-full`}>
-          <ThemeProvider
-            {...props}
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+          <Providers>
             <main className="flex h-full flex-row gap-2">
               <Sidebar />
               <div className="h-full w-full py-2 pr-2">
@@ -37,7 +30,7 @@ export default function RootLayout({
                 </section>
               </div>
             </main>
-          </ThemeProvider>
+          </Providers>
         </body>
       </TRPCReactProvider>
     </html>
