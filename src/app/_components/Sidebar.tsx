@@ -5,6 +5,7 @@ import UserButton from "./UserButton"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { type ReactNode } from "react"
+import ThemeToggle from "./ThemeToggle"
 
 function SidebarLink({
   href,
@@ -43,7 +44,10 @@ export default function Sidebar() {
           Mods
         </SidebarLink>
       </div>
-      <UserButton />
+      <div className="flex flex-col gap-2">
+        <ThemeToggle />
+        <UserButton />
+      </div>
     </div>
   )
 }
