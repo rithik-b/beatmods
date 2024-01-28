@@ -103,10 +103,7 @@ export const authenticatedProcedure = publicProcedure.use(async (opts) => {
   // TODO better error handling
   if (!!error || !data?.[0])
     throw new TRPCError({
-      code:
-        error?.code === "invalid_token"
-          ? "UNAUTHORIZED"
-          : "INTERNAL_SERVER_ERROR",
+      code: !!error ? "INTERNAL_SERVER_ERROR" : "UNAUTHORIZED",
       message: error?.message,
     })
   return opts.next({ ctx: { ...opts.ctx, user: data[0] } })

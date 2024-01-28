@@ -2,6 +2,7 @@
 
 import Contributors from "@beatmods/components/Contributors"
 import { DataTable } from "@beatmods/components/ui/data-table"
+import { Skeleton } from "@beatmods/components/ui/skeleton"
 import { api } from "@beatmods/trpc/react"
 import { type Database } from "@beatmods/types/supabase"
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table"
@@ -52,8 +53,16 @@ const columns: ColumnDef<ModColumns>[] = [
 export default function ModsTable() {
   const { data: mods, isLoading } = api.mods.getModsForListing.useQuery()
 
-  // TODO Add skeleton loading
-  if (isLoading) return null
-
+  if (isLoading)
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-10" />
+        <Skeleton className="h-14" />
+        <Skeleton className="h-14" />
+        <Skeleton className="h-14" />
+        <Skeleton className="h-14" />
+        <Skeleton className="h-14" />
+      </div>
+    )
   return <DataTable columns={columns} data={mods!} />
 }

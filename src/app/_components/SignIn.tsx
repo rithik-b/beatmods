@@ -17,7 +17,6 @@ export default function SignIn() {
       supabase.auth.onAuthStateChange((event) => {
         if (event === "SIGNED_IN") {
           router.replace(path)
-          router.refresh()
         }
       })
     },
