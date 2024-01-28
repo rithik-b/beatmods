@@ -9,27 +9,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@beatmods/components/ui/dropdown-menu"
+import { useEffect, useState } from "react"
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="justify-start">
           <div className="flex w-8 items-center justify-center">
-            {(() => {
-              switch (theme) {
-                case "dark":
-                  return <Moon className="h-4 w-4" />
-                case "light":
-                  return <Sun className="h-4 w-4" />
-                case "system":
-                  return <Laptop className="h-4 w-4" />
-                default:
-                  return <Loader2 className="h-4 w-4 animate-spin" />
-              }
-            })()}
+            {isMounted ? (
+              theme === "system" ? (
+                <Laptop className="h-4 w-4" />
+              ) : theme === "dark" ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )
+            ) : (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            )}
           </div>
           Theme
         </Button>
