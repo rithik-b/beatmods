@@ -2,6 +2,7 @@
 
 import Contributors from "@beatmods/components/Contributors"
 import { DataTable } from "@beatmods/components/ui/data-table"
+import { Select } from "@beatmods/components/ui/select"
 import { Skeleton } from "@beatmods/components/ui/skeleton"
 import type modsRouter from "@beatmods/server/api/routers/mods"
 import { api } from "@beatmods/trpc/react"
@@ -63,5 +64,14 @@ export default function ModsTable() {
         <Skeleton className="h-14" />
       </div>
     )
-  return <DataTable columns={columns} data={mods!} />
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-row justify-between">
+        <Select>
+          <option>Category</option>
+        </Select>
+      </div>
+      <DataTable columns={columns} data={mods!} />
+    </div>
+  )
 }
