@@ -12,6 +12,16 @@ import { z } from "zod"
 import NewVersionSchema, {
   NewVersionSchemaWithoutUploadPath,
 } from "@beatmods/types/NewVersionSchema"
+import drizzleClient from "@beatmods/server/drizzleClient"
+import {
+  gameVersions,
+  githubUsers,
+  modContributors,
+  modVersionSupportedGameVersions,
+  modVersions,
+  mods,
+} from "@beatmods/types/autogen/drizzle"
+import { eq, max } from "drizzle-orm"
 
 const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
@@ -42,38 +52,37 @@ const modsRouter = createTRPCRouter({
           })
       }
     }),
-  modBySlug: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    const { data: mod, error: modError } = await ctx.supabase
-      .from("mods")
-      .select("*")
-      .eq("slug", input)
-      .single()
+  modBySlug: publicProcedure.input(z.string()).query(async ({ input }) => {
+    const mod = (
+      await drizzleClient
+        .select()
+        .from(mods)
+        .where(eq(mods.slug, input))
+        .limit(1)
+    )?.[0]
 
-    if (!!modError) {
-      if (modError.code === "PGRST116")
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Mod not found",
-        })
-
+    if (!mod)
       throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: modError.message,
+        code: "NOT_FOUND",
+        message: "Mod not found",
       })
+
+    const contributors = await drizzleClient
+      .select({
+        id: githubUsers.id,
+        name: githubUsers.name,
+        userName: githubUsers.userName,
+        avatarUrl: githubUsers.avatarUrl,
+        createdAt: githubUsers.createdAt,
+      })
+      .from(githubUsers)
+      .leftJoin(modContributors, eq(modContributors.userId, githubUsers.id))
+      .where(eq(modContributors.modId, mod.id))
+
+    return {
+      ...mod,
+      contributors,
     }
-
-    const { data: contributors, error: contributorsError } = await ctx.supabase
-      .from("mod_contributors")
-      .select("github_users(*)")
-      .eq("mod_id", mod.id)
-
-    if (!!contributorsError)
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: contributorsError.message,
-      })
-
-    return { ...mod, contributors: contributors.map((c) => c.github_users!) }
   }),
   // TODO look for lowest version that supports all game versions
   getModsForGameVersions: publicProcedure
@@ -109,7 +118,7 @@ const modsRouter = createTRPCRouter({
     }),
   getUploadUrlForNewModVersion: modContributorProcedure
     .input(NewVersionSchemaWithoutUploadPath)
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const { modId, version } = input
       const serviceRoleClient = getSupabaseServiceRoleClient()
       // TODO validation
@@ -119,7 +128,7 @@ const modsRouter = createTRPCRouter({
     }),
   createNewModVersion: modContributorProcedure
     .input(NewVersionSchema)
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const {
         modId,
         version,
@@ -181,15 +190,86 @@ const modsRouter = createTRPCRouter({
       }
     }),
   getModsForListing: publicProcedure.query(async () => {
-    const serviceRoleClient = getSupabaseServiceRoleClient()
-    const { data, error } = await serviceRoleClient.rpc("get_mods_listing")
-    // TODO better error handling
-    if (!!error)
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error.message,
+    const unAggregatedMods = await drizzleClient
+      .select({
+        id: mods.id,
+        name: mods.name,
+        slug: mods.slug,
+        category: mods.category,
+        contributor: githubUsers,
+        supportedGameVersion: gameVersions.version,
+        latestVersion: max(modVersions.version),
       })
-    return data
+      .from(mods)
+      .leftJoin(modContributors, eq(modContributors.modId, mods.id))
+      .leftJoin(githubUsers, eq(githubUsers.id, modContributors.userId))
+      .leftJoin(modVersions, eq(modVersions.modId, mods.id))
+      .leftJoin(
+        modVersionSupportedGameVersions,
+        eq(modVersionSupportedGameVersions.modVersionId, modVersions.id),
+      )
+      .leftJoin(
+        gameVersions,
+        eq(gameVersions.id, modVersionSupportedGameVersions.gameVersionId),
+      )
+      .groupBy(mods.id, githubUsers.id, gameVersions.id)
+
+    const aggregatedMods = unAggregatedMods.reduce(
+      (acc, mod) => {
+        const {
+          id,
+          name,
+          slug,
+          category,
+          latestVersion,
+          contributor,
+          supportedGameVersion,
+        } = mod
+
+        const existingMod = acc.get(id)
+
+        if (!!existingMod) {
+          existingMod.contributors = !!contributor
+            ? [...existingMod.contributors, contributor]
+            : existingMod.contributors
+
+          existingMod.supportedGameVersions = !!supportedGameVersion
+            ? [...existingMod.supportedGameVersions, supportedGameVersion]
+            : existingMod.supportedGameVersions
+        } else {
+          acc.set(id, {
+            id,
+            name,
+            slug,
+            category,
+            latestVersion,
+            contributors: !!contributor ? [contributor] : [],
+            supportedGameVersions: !!supportedGameVersion
+              ? [supportedGameVersion]
+              : [],
+          })
+        }
+        return acc
+      },
+      new Map<
+        string,
+        Omit<
+          (typeof unAggregatedMods)[0],
+          "contributor" | "supportedGameVersion" | "version"
+        > & {
+          contributors: Exclude<
+            (typeof unAggregatedMods)[0]["contributor"],
+            null
+          >[]
+          supportedGameVersions: Exclude<
+            (typeof unAggregatedMods)[0]["supportedGameVersion"],
+            null
+          >[]
+        }
+      >(),
+    )
+
+    return Array.from(aggregatedMods.values())
   }),
 })
 

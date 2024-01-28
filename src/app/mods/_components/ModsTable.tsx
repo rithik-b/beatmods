@@ -3,14 +3,13 @@
 import Contributors from "@beatmods/components/Contributors"
 import { DataTable } from "@beatmods/components/ui/data-table"
 import { Skeleton } from "@beatmods/components/ui/skeleton"
+import type modsRouter from "@beatmods/server/api/routers/mods"
 import { api } from "@beatmods/trpc/react"
-import { type Database } from "@beatmods/types/supabase"
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table"
+import { type inferRouterOutputs } from "@trpc/server"
 import Link from "next/link"
 
-type ModColumns =
-  Database["public"]["Functions"]["get_mods_listing"]["Returns"][0]
-
+type ModColumns = inferRouterOutputs<typeof modsRouter>["getModsForListing"][0]
 const columnHelper = createColumnHelper<ModColumns>()
 
 const columns: ColumnDef<ModColumns>[] = [
@@ -46,7 +45,7 @@ const columns: ColumnDef<ModColumns>[] = [
   },
   {
     header: "Latest Version",
-    accessorKey: "latest_mod_version",
+    accessorKey: "latestVersion",
   },
 ]
 

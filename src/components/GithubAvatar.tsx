@@ -18,7 +18,7 @@ export default function GithubAvatar({ githubUser, className, size }: Props) {
 
   return (
     <Avatar className={cn(`w-${size} h-${size}`, className)}>
-      <AvatarImage src={githubUser.avatar_url ?? undefined} alt={name} />
+      <AvatarImage src={githubUser.avatarUrl ?? undefined} alt={name} />
       <AvatarFallback>{getShortUsernameForAvatar(name)}</AvatarFallback>
     </Avatar>
   )

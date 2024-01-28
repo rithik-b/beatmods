@@ -1,7 +1,7 @@
 "server only"
 
 import { env } from "@beatmods/env"
-import { type Database } from "@beatmods/types/supabase"
+import { type Database } from "@beatmods/types/autogen/supabase"
 import { createClient } from "@supabase/supabase-js"
 
 export default function getSupabaseServiceRoleClient() {
