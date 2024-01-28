@@ -281,6 +281,18 @@ export interface Database {
           user_name: string
         }[]
       }
+      get_mods_listing: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          slug: string
+          category: string
+          contributors: Database["public"]["CompositeTypes"]["contributor_type"][]
+          supported_game_versions: string[]
+          latest_mod_version: string
+        }[]
+      }
       new_mod: {
         Args: {
           id: string
@@ -298,7 +310,12 @@ export interface Database {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      contributor_type: {
+        id: string
+        name: string
+        user_name: string
+        avatar_url: string
+      }
     }
   }
   storage: {

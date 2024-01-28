@@ -1,4 +1,3 @@
-import { type Database } from "@beatmods/types/supabase"
 import {
   authenticatedProcedure,
   createTRPCRouter,
@@ -181,6 +180,17 @@ const modsRouter = createTRPCRouter({
           })
       }
     }),
+  getModsForListing: publicProcedure.query(async () => {
+    const serviceRoleClient = getSupabaseServiceRoleClient()
+    const { data, error } = await serviceRoleClient.rpc("get_mods_listing")
+    // TODO better error handling
+    if (!!error)
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: error.message,
+      })
+    return data
+  }),
 })
 
 export default modsRouter

@@ -29,9 +29,13 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <main className="flex h-full flex-row">
+            <main className="flex h-full flex-row gap-2">
               <Sidebar />
-              <section className="h-full w-full border-l">{children}</section>
+              <div className="h-full w-full py-2 pr-2">
+                <section className="h-full rounded-md border">
+                  {children}
+                </section>
+              </div>
             </main>
           </ThemeProvider>
         </body>

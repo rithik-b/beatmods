@@ -32,7 +32,7 @@ export default function Sidebar() {
   const pathName = usePathname()
 
   return (
-    <div className="flex min-w-48 flex-col justify-between px-2 py-5">
+    <div className="flex min-w-48 flex-col justify-between py-5 pl-2">
       <div className="flex flex-col gap-2">
         <SidebarLink href="/" isSelected={pathName === "/"}>
           <HomeIcon className="h-4 w-4" />
