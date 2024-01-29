@@ -35,8 +35,8 @@ import { getTRPCErrorFromUnknown } from "@trpc/server"
 interface UploadVersionContentProps {
   modId: string
   gameVersions: GameVersion[]
-  onUploadSuccess?: () => void
-  onCloseAutoFocus?: () => void
+  onUploadSuccess: () => void
+  onCloseAutoFocus: () => void
 }
 
 function UploadVersionContent({
@@ -77,7 +77,7 @@ function UploadVersionContent({
       await createNewModVersionAsync({
         ...formData,
       })
-      onUploadSuccess?.()
+      onUploadSuccess()
     } catch (e) {
       setSubmitError(getTRPCErrorFromUnknown(e).message)
     }
@@ -177,6 +177,7 @@ export default function UploadVersion({
 }: UploadVersionProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
+  const utils = api.useUtils()
 
   return (
     <Dialog
@@ -197,6 +198,7 @@ export default function UploadVersion({
           gameVersions={gameVersions}
           onUploadSuccess={() => {
             setIsOpen(false)
+            void utils.mods.getModVersions.invalidate({ modId })
           }}
           onCloseAutoFocus={() => {
             setModalVisible(false)
