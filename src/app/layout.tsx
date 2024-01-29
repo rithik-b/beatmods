@@ -26,8 +26,8 @@ export default function RootLayout({
             <main className="flex h-full flex-row gap-2">
               <Sidebar />
               <div className="h-full w-full py-2 pr-2">
-                <ScrollArea className="h-full rounded-md border p-5">
-                  {children}
+                <ScrollArea className="h-full rounded-md border">
+                  <section className="h-full p-5">{children}</section>
                 </ScrollArea>
               </div>
             </main>

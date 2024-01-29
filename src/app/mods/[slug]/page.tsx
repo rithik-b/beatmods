@@ -11,6 +11,8 @@ export default async function ModDetails({
   const { slug } = params
   try {
     const mod = await api.mods.modBySlug.query(slug)
+    const currentUser = await api.user.user.query()
+    const isContributor = mod.contributors.some((c) => c.id === currentUser?.id)
     const gameVersions = await api.gameVersions.query()
 
     return (
@@ -31,7 +33,11 @@ export default async function ModDetails({
             </p>
           )}
         </div>
-        <Versions modId={mod.id} gameVersions={gameVersions} />
+        <Versions
+          modId={mod.id}
+          gameVersions={gameVersions}
+          isContributor={isContributor}
+        />
       </div>
     )
   } catch (e) {

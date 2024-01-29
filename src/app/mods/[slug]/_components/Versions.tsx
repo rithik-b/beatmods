@@ -16,16 +16,23 @@ import type GameVersion from "@beatmods/types/GameVersion"
 interface Props {
   modId: string
   gameVersions: GameVersion[]
+  isContributor: boolean
 }
 
-export default function Versions({ modId, gameVersions }: Props) {
+export default function Versions({
+  modId,
+  gameVersions,
+  isContributor,
+}: Props) {
   const { data } = api.mods.getModVersions.useQuery({ modId })
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-row items-center justify-between">
         <h2 className="text-4xl">Versions</h2>
-        <UploadVersion modId={modId} gameVersions={gameVersions} />
+        {isContributor && (
+          <UploadVersion modId={modId} gameVersions={gameVersions} />
+        )}
       </div>
       {!!data &&
         data.map((version) => (
