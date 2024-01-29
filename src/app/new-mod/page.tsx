@@ -11,7 +11,7 @@ export default async function NewMod() {
   const categories = await api.categories.query()
 
   return (
-    <div className="p-5">
+    <div>
       {isLogged ? (
         <NewModForm categories={categories} />
       ) : (
