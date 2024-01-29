@@ -11,13 +11,14 @@ export default async function ModDetails({
   const { slug } = params
   try {
     const mod = await api.mods.modBySlug.query(slug)
+    const gameVersions = await api.gameVersions.query()
 
     return (
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <div className="flex flex-row items-center gap-2">
             <h1 className="text-6xl">{mod.name}</h1>
-            <div className=" h-fit rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground">
+            <div className="flex h-fit min-w-16 justify-center rounded-full bg-primary p-2 text-sm text-primary-foreground">
               {mod.category}
             </div>
           </div>
@@ -30,13 +31,13 @@ export default async function ModDetails({
             </p>
           )}
         </div>
-        <Versions modId={mod.id} />
+        <Versions modId={mod.id} gameVersions={gameVersions} />
       </div>
     )
   } catch (e) {
     return (
       <div className="flex h-full flex-col items-center justify-center">
-        <p>{getTRPCErrorFromUnknown(e).message}</p>
+        <p className="text-2xl">{getTRPCErrorFromUnknown(e).message}</p>
       </div>
     )
   }

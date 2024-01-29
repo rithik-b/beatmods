@@ -1,12 +1,5 @@
 "use client"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@beatmods/components/ui/card"
 import { NewVersionSchemaWithoutUploadPath } from "@beatmods/types/NewVersionSchema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -28,16 +21,29 @@ import ModDropzone from "./ModDropzone"
 import { getSupabaseBrowserClient } from "@beatmods/utils"
 import GameVersionInput from "./GameVersionInput"
 import DependenciesEditor from "./DependenciesEditor"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@beatmods/components/ui/dialog"
+import { Plus } from "lucide-react"
 
-interface Props {
+interface UploadVersionContentProps {
   modId: string
   gameVersions: GameVersion[]
+  onUploadSuccess?: () => void
+  onCloseAutoFocus?: () => void
 }
 
-export default function UploadVersion({
+function UploadVersionContent({
   modId,
   gameVersions: allGameVersions,
-}: Props) {
+  onUploadSuccess,
+  onCloseAutoFocus,
+}: UploadVersionContentProps) {
   const form = useForm<z.infer<typeof NewVersionSchemaWithoutUploadPath>>({
     resolver: zodResolver(NewVersionSchemaWithoutUploadPath),
     defaultValues: {
@@ -72,85 +78,127 @@ export default function UploadVersion({
       ...formData,
       uploadPath: data!.path,
     })
+
+    onUploadSuccess?.()
   }
+
   const hasErrors = useMemo(
     () => Object.keys(form.formState.errors).length > 0,
     [form.formState.errors],
   )
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>New Version</CardTitle>
-        <CardDescription>Upload a new version of your mod</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form
-            className="flex flex-col gap-5"
-            onSubmit={form.handleSubmit(onSubmit)}
+    <DialogContent onCloseAutoFocus={onCloseAutoFocus}>
+      <DialogHeader>
+        <DialogTitle>New Version</DialogTitle>
+        <DialogDescription>Upload a new version of your mod</DialogDescription>
+      </DialogHeader>
+      <Form {...form}>
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
+          <FormField
+            control={form.control}
+            name="version"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Version*</FormLabel>
+                <FormControl>
+                  <Input placeholder="1.0.0" {...field} autoComplete="off" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="supportedGameVersionIds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Supported Game Versions*</FormLabel>
+                <FormControl>
+                  <GameVersionInput
+                    value={field.value}
+                    onChange={(newGameVersionIds) => {
+                      field.onChange(newGameVersionIds)
+                      setSelectedGameVersionIds(newGameVersionIds)
+                    }}
+                    allGameVersions={allGameVersions}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="dependencies"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dependencies</FormLabel>
+                <FormControl>
+                  <DependenciesEditor
+                    gameVersionIds={selectedGameVersionIds}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <ModDropzone setFile={setModFile} />
+          <Button
+            type="submit"
+            disabled={!modFile || hasErrors}
+            isLoading={form.formState.isSubmitting}
           >
-            <FormField
-              control={form.control}
-              name="version"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Version*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="1.0.0" {...field} autoComplete="off" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="supportedGameVersionIds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Supported Game Versions*</FormLabel>
-                  <FormControl>
-                    <GameVersionInput
-                      value={field.value}
-                      onChange={(newGameVersionIds) => {
-                        field.onChange(newGameVersionIds)
-                        setSelectedGameVersionIds(newGameVersionIds)
-                      }}
-                      allGameVersions={allGameVersions}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="dependencies"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dependencies</FormLabel>
-                  <FormControl>
-                    <DependenciesEditor
-                      gameVersionIds={selectedGameVersionIds}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <ModDropzone setFile={setModFile} />
-            <Button
-              type="submit"
-              disabled={!modFile || hasErrors}
-              isLoading={form.formState.isSubmitting}
-            >
-              Upload
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            Upload
+          </Button>
+        </form>
+      </Form>
+    </DialogContent>
+  )
+}
+
+interface UploadVersionProps {
+  modId: string
+  gameVersions: GameVersion[]
+}
+
+export default function UploadVersion({
+  modId,
+  gameVersions,
+}: UploadVersionProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (open) setModalVisible(true)
+        setIsOpen(open)
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button className="flex flex-row items-center gap-2">
+          <Plus /> Add new version
+        </Button>
+      </DialogTrigger>
+      {modalVisible && ( // Need to do this to reset the form when the modal is closed
+        <UploadVersionContent
+          modId={modId}
+          gameVersions={gameVersions}
+          onUploadSuccess={() => {
+            setIsOpen(false)
+          }}
+          onCloseAutoFocus={() => {
+            setModalVisible(false)
+          }}
+        />
+      )}
+    </Dialog>
   )
 }
