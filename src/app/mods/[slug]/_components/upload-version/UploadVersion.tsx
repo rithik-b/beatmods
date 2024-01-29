@@ -30,6 +30,7 @@ import {
 } from "@beatmods/components/ui/dialog"
 import { Plus } from "lucide-react"
 import NewVersionSchema from "@beatmods/types/NewVersionSchema"
+import { getTRPCErrorFromUnknown } from "@trpc/server"
 
 interface UploadVersionContentProps {
   modId: string
@@ -61,23 +62,25 @@ function UploadVersionContent({
     api.mods.getUploadUrlForNewModVersion.useMutation()
   const { mutateAsync: createNewModVersionAsync } =
     api.mods.createNewModVersion.useMutation()
+  const [submitError, setSubmitError] = useState<string | undefined>(undefined)
 
   const onSubmit = async (formData: z.infer<typeof NewVersionSchema>) => {
     if (!modFile) return
+    setSubmitError(undefined)
 
-    const uploadUrl = await getUploadUrlAsync(formData)
-    const supabase = getSupabaseBrowserClient()
-
-    const { data } = await supabase.storage
-      .from("mods")
-      .uploadToSignedUrl(uploadUrl.data!.path, uploadUrl.data!.token, modFile)
-
-    await createNewModVersionAsync({
-      ...formData,
-      uploadPath: data!.path,
-    })
-
-    onUploadSuccess?.()
+    try {
+      const uploadUrl = await getUploadUrlAsync(formData)
+      const supabase = getSupabaseBrowserClient()
+      await supabase.storage
+        .from("mods")
+        .uploadToSignedUrl(uploadUrl.data!.path, uploadUrl.data!.token, modFile)
+      await createNewModVersionAsync({
+        ...formData,
+      })
+      onUploadSuccess?.()
+    } catch (e) {
+      setSubmitError(getTRPCErrorFromUnknown(e).message)
+    }
   }
 
   const hasErrors = useMemo(
@@ -90,6 +93,9 @@ function UploadVersionContent({
       <DialogHeader>
         <DialogTitle>New Version</DialogTitle>
         <DialogDescription>Upload a new version of your mod</DialogDescription>
+        <DialogDescription className="h-4 text-destructive">
+          {!!submitError && submitError}
+        </DialogDescription>
       </DialogHeader>
       <Form {...form}>
         <form
