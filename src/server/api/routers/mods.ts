@@ -9,9 +9,7 @@ import NewModSchema from "@beatmods/types/NewModSchema"
 import getSupabaseServiceRoleClient from "@beatmods/server/getSupabaseServiceRoleClient"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
-import NewVersionSchema, {
-  NewVersionSchemaWithoutUploadPath,
-} from "@beatmods/types/NewVersionSchema"
+import NewVersionSchema from "@beatmods/types/NewVersionSchema"
 import drizzleClient from "@beatmods/server/drizzleClient"
 import {
   gameVersions,
@@ -22,7 +20,7 @@ import {
   modVersions,
   mods,
 } from "@beatmods/types/autogen/drizzle"
-import { and, desc, eq, max, sql } from "drizzle-orm"
+import { and, count, desc, eq, max, sql } from "drizzle-orm"
 
 const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
@@ -118,11 +116,62 @@ const modsRouter = createTRPCRouter({
       return mods
     }),
   getUploadUrlForNewModVersion: modContributorProcedure
-    .input(NewVersionSchemaWithoutUploadPath)
+    .input(NewVersionSchema)
     .mutation(async ({ input }) => {
       const { modId, version } = input
+
+      // Need to do the following validations
+      // - Mod exists
+      // - Mod version doesn't already exist
+      // - Game version exists
+      // - TODO Dependencies exist for the current game version
+
+      const modCount = (
+        await drizzleClient
+          .select({ modCount: count(mods) })
+          .from(mods)
+          .where(eq(mods.id, modId))
+          .limit(1)
+      )?.[0]?.modCount
+
+      if (modCount === 0)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Mod does not exist",
+        })
+
+      const modVersionCount = (
+        await drizzleClient
+          .select({ modVersionCount: count(modVersions) })
+          .from(modVersions)
+          .where(
+            and(eq(modVersions.modId, modId), eq(modVersions.version, version)),
+          )
+          .limit(1)
+      )?.[0]?.modVersionCount
+
+      if (modVersionCount !== 0)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Mod version already exists",
+        })
+
+      const gameVersionCount = (
+        await drizzleClient
+          .select({ gameVersionCount: count(gameVersions) })
+          .from(gameVersions)
+          .where(eq(gameVersions.id, input.supportedGameVersionIds[0]))
+          .limit(1)
+      )?.[0]?.gameVersionCount
+
+      if (gameVersionCount === 0)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game version does not exist",
+        })
+
       const serviceRoleClient = getSupabaseServiceRoleClient()
-      // TODO validation
+
       return await serviceRoleClient.storage
         .from("mods")
         .createSignedUploadUrl(`${modId}/${modId}_${version}.zip`)
@@ -130,65 +179,41 @@ const modsRouter = createTRPCRouter({
   createNewModVersion: modContributorProcedure
     .input(NewVersionSchema)
     .mutation(async ({ input }) => {
-      const {
-        modId,
-        version,
-        supportedGameVersionIds,
-        dependencies,
-        uploadPath,
-      } = input
+      const { modId, version, supportedGameVersionIds, dependencies } = input
       const serviceRoleClient = getSupabaseServiceRoleClient()
       const { data: downloadUrl } = serviceRoleClient.storage
         .from("mods")
-        .getPublicUrl(uploadPath)
+        .getPublicUrl(`${modId}/${modId}_${version}.zip`)
 
-      // TODO better error handling
-      const { data, error: versionsError } = await serviceRoleClient
-        .from("mod_versions")
-        .insert({
-          mod_id: modId,
-          version,
-          download_url: downloadUrl.publicUrl,
-        })
-        .select("id")
-      if (versionsError)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: versionsError.message,
-        })
+      await drizzleClient.transaction(async (trx) => {
+        const modVersionId = (
+          await trx
+            .insert(modVersions)
+            .values({
+              modId,
+              version,
+              downloadUrl: downloadUrl.publicUrl,
+            })
+            .returning({ id: modVersions.id })
+        )[0]!.id
 
-      // TODO better error handling
-      const { error: gameVersionsError } = await serviceRoleClient
-        .from("mod_version_supported_game_versions")
-        .insert(
+        await trx.insert(modVersionSupportedGameVersions).values(
           supportedGameVersionIds.map((gameVersionId) => ({
-            mod_version_id: data[0]!.id,
-            game_version_id: gameVersionId,
+            modVersionId,
+            gameVersionId,
           })),
         )
-      if (gameVersionsError)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: gameVersionsError.message,
-        })
 
-      if (dependencies.length !== 0) {
-        // TODO better error handling
-        const { error: dependenciesError } = await serviceRoleClient
-          .from("mod_version_dependencies")
-          .insert(
+        if (dependencies.length !== 0) {
+          await trx.insert(modVersionDependencies).values(
             dependencies.map((dependency) => ({
-              mod_versions_id: data[0]!.id,
-              dependency_id: dependency.id,
+              modVersionsId: modVersionId,
+              dependencyId: dependency.id,
               semver: dependency.version,
             })),
           )
-        if (dependenciesError)
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: dependenciesError.message,
-          })
-      }
+        }
+      })
     }),
   getModsForListing: publicProcedure
     .input(

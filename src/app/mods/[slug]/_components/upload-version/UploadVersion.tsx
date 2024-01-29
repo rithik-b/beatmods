@@ -1,6 +1,5 @@
 "use client"
 
-import { NewVersionSchemaWithoutUploadPath } from "@beatmods/types/NewVersionSchema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { type z } from "zod"
@@ -30,6 +29,7 @@ import {
   DialogTrigger,
 } from "@beatmods/components/ui/dialog"
 import { Plus } from "lucide-react"
+import NewVersionSchema from "@beatmods/types/NewVersionSchema"
 
 interface UploadVersionContentProps {
   modId: string
@@ -44,8 +44,8 @@ function UploadVersionContent({
   onUploadSuccess,
   onCloseAutoFocus,
 }: UploadVersionContentProps) {
-  const form = useForm<z.infer<typeof NewVersionSchemaWithoutUploadPath>>({
-    resolver: zodResolver(NewVersionSchemaWithoutUploadPath),
+  const form = useForm<z.infer<typeof NewVersionSchema>>({
+    resolver: zodResolver(NewVersionSchema),
     defaultValues: {
       modId,
       version: "",
@@ -62,9 +62,7 @@ function UploadVersionContent({
   const { mutateAsync: createNewModVersionAsync } =
     api.mods.createNewModVersion.useMutation()
 
-  const onSubmit = async (
-    formData: z.infer<typeof NewVersionSchemaWithoutUploadPath>,
-  ) => {
+  const onSubmit = async (formData: z.infer<typeof NewVersionSchema>) => {
     if (!modFile) return
 
     const uploadUrl = await getUploadUrlAsync(formData)

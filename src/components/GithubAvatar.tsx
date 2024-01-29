@@ -10,14 +10,13 @@ import { getNameForGithubUser } from "@beatmods/types/GithubUser"
 interface Props {
   githubUser: GithubUser
   className?: string
-  size?: number
 }
 
-export default function GithubAvatar({ githubUser, className, size }: Props) {
+export default function GithubAvatar({ githubUser, className }: Props) {
   const name = getNameForGithubUser(githubUser)
 
   return (
-    <Avatar className={cn(`w-${size} h-${size}`, className)}>
+    <Avatar className={className}>
       <AvatarImage src={githubUser.avatarUrl ?? undefined} alt={name} />
       <AvatarFallback>{getShortUsernameForAvatar(name)}</AvatarFallback>
     </Avatar>

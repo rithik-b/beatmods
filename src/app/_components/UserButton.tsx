@@ -52,7 +52,7 @@ export default function UserButton() {
 
   return (
     <Button variant="ghost" className="flex flex-row justify-start gap-2">
-      <GithubAvatar size={8} githubUser={user} />
+      <GithubAvatar githubUser={user} className="h-8 w-8" />
       <span className="text-md">{getNameForGithubUser(user)}</span>
     </Button>
   )

@@ -1,6 +1,6 @@
 import DependenciesEditorBase from "@beatmods/components/DependenciesEditor"
 import { useFormField } from "@beatmods/components/ui/form"
-import { type NewVersionSchemaWithoutUploadPath } from "@beatmods/types/NewVersionSchema"
+import type NewVersionSchema from "@beatmods/types/NewVersionSchema"
 import { type OnValidate } from "@monaco-editor/react"
 import { type ComponentProps, useCallback, useRef } from "react"
 import { useFormContext } from "react-hook-form"
@@ -14,7 +14,7 @@ type Props = Omit<
 export default function DependenciesEditor(props: Props) {
   const { error } = useFormField()
   const { setError, clearErrors } =
-    useFormContext<z.infer<typeof NewVersionSchemaWithoutUploadPath>>()
+    useFormContext<z.infer<typeof NewVersionSchema>>()
   const errorRef = useRef<string | undefined>(undefined)
   const isFocusedRef = useRef(false)
 
