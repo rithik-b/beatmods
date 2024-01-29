@@ -6,6 +6,7 @@ import { TRPCReactProvider } from "@beatmods/trpc/react"
 import { GeistSans } from "geist/font/sans"
 import { Providers } from "@beatmods/components/Providers"
 import Sidebar from "./_components/Sidebar"
+import { ScrollArea } from "@beatmods/components/ui/scroll-area"
 
 export const metadata = {
   title: "BeatMods",
@@ -25,9 +26,9 @@ export default function RootLayout({
             <main className="flex h-full flex-row gap-2">
               <Sidebar />
               <div className="h-full w-full py-2 pr-2">
-                <section className="h-full rounded-md border p-5">
+                <ScrollArea className="h-full rounded-md border p-5">
                   {children}
-                </section>
+                </ScrollArea>
               </div>
             </main>
           </Providers>
