@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@beatmods/components/ui/select"
+import { useRouter } from "next/navigation"
 
 interface Props {
   categories: string[]
@@ -38,17 +39,19 @@ export default function NewModForm({ categories }: Props) {
       category: categories[0],
     },
   })
+  const router = useRouter()
   const { mutateAsync } = api.mods.createNew.useMutation()
 
-  function onSubmit(values: z.infer<typeof newModSchema>) {
-    return mutateAsync(values)
+  const onSubmit = async (values: z.infer<typeof newModSchema>) => {
+    const result = await mutateAsync(values)
+    router.push(`/mods/${result}`)
   }
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 rounded-xl border-2 border-border bg-card p-5 text-card-foreground"
+        className="space-y-6 rounded-xl border-2 border-border bg-card p-5 text-card-foreground"
       >
         <FormField
           control={form.control}

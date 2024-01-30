@@ -26,30 +26,27 @@ const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
     .input(NewModSchema)
     .mutation(async ({ ctx, input }) => {
-      const serviceRoleClient = getSupabaseServiceRoleClient()
+      const insertResult = await drizzleClient
+        .insert(mods)
+        .values({
+          id: input.id,
+          name: input.name,
+          description: !input.description ? null! : input.description,
+          category: input.category,
+          moreInfoUrl: input.moreInfoUrl,
+          slug: createSlug(input.id),
+        })
+        .returning({ id: mods.id })
+        .onConflictDoNothing({ target: mods.id })
 
-      const { error } = await serviceRoleClient.rpc("new_mod", {
-        id: input.id,
-        name: input.name,
-        description: !input.description ? null! : input.description,
-        category: input.category,
-        more_info_url: input.moreInfoUrl,
-        slug: createSlug(input.id),
-        user_id: ctx.user.id,
-      })
-
-      if (error) {
-        if (error.code === "23505")
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Mod already exists",
-          })
-        else
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: error.message,
-          })
+      if (!insertResult[0]?.id) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `Mod with id "${input.id}" already exists`,
+        })
       }
+
+      return insertResult[0].id
     }),
   modBySlug: publicProcedure.input(z.string()).query(async ({ input }) => {
     const mod = (
