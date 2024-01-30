@@ -51,7 +51,7 @@ export default function NewModForm({ categories }: Props) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 rounded-xl border-2 border-border bg-card p-5 text-card-foreground"
+        className="space-y-8 rounded-xl border-2 border-border bg-card p-5 text-card-foreground"
       >
         <FormField
           control={form.control}
