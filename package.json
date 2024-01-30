@@ -7,7 +7,9 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "supabase": "supabase start -x edge-runtime,imgproxy,postgres-meta,studio",
+    "supabase:studio": "supabase start -x edge-runtime,imgproxy"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
