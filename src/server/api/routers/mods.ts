@@ -20,7 +20,7 @@ import {
   modVersions,
   mods,
 } from "@beatmods/types/autogen/drizzle"
-import { and, count, desc, eq, max, sql } from "drizzle-orm"
+import { and, count, desc, eq, inArray, max, sql } from "drizzle-orm"
 
 const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
@@ -83,23 +83,25 @@ const modsRouter = createTRPCRouter({
   // TODO look for lowest version that supports all game versions
   getModsForGameVersions: publicProcedure
     .input(z.array(z.string()))
-    .query(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
-        .from("mod_version_supported_game_versions")
-        .select("mod_versions(mod_id, version)")
-        .in("game_version_id", input)
-
-      // TODO better error handling
-      if (!!error)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error.message,
+    .query(async ({ input }) => {
+      const data = await drizzleClient
+        .select({
+          modVersion: {
+            modId: modVersions.modId,
+            version: modVersions.version,
+            gameVersionId: modVersionSupportedGameVersions.gameVersionId,
+          },
         })
+        .from(modVersions)
+        .leftJoin(
+          modVersionSupportedGameVersions,
+          eq(modVersionSupportedGameVersions.modVersionId, modVersions.id),
+        )
+        .where(inArray(modVersionSupportedGameVersions.gameVersionId, input))
 
       const mods = new Map<string, string[]>()
-      data.forEach(({ mod_versions }) => {
-        const modId = mod_versions?.mod_id
-        const version = mod_versions?.version
+      data.forEach(({ modVersion }) => {
+        const { modId, version } = modVersion
 
         if (!modId || !version) return
 
