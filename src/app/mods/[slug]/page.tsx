@@ -2,6 +2,7 @@ import Contributors from "@beatmods/components/Contributors"
 import { api } from "@beatmods/trpc/server"
 import { getTRPCErrorFromUnknown } from "@trpc/server"
 import Versions from "./_components/Versions"
+import ContributorsEditor from "./_components/contributors-editor/ContributorsEditor"
 
 export default async function ModDetails({
   params,
@@ -24,7 +25,16 @@ export default async function ModDetails({
               {mod.category}
             </div>
           </div>
-          <Contributors contributors={mod.contributors} />
+          <div className="flex h-8 flex-row gap-2">
+            <Contributors contributors={mod.contributors} />
+            {isContributor && (
+              <ContributorsEditor
+                modId={mod.id}
+                modName={mod.name}
+                contributors={mod.contributors}
+              />
+            )}
+          </div>
           {mod.description ? (
             <p className="text-lg">{mod.description}</p>
           ) : (

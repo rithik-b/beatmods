@@ -402,6 +402,39 @@ const modsRouter = createTRPCRouter({
         dependencies: Array.from(modVersion.dependencies.values()),
       }))
     }),
+
+  addModContributor: modContributorProcedure
+    .input(z.object({ modId: z.string(), userId: z.string() }))
+    .query(async ({ input }) => {
+      await drizzleClient.insert(modContributors).values({
+        modId: input.modId,
+        userId: input.userId,
+      })
+    }),
+
+  removeModContributor: modContributorProcedure
+    .input(z.object({ modId: z.string(), userId: z.string() }))
+    .mutation(async ({ input }) => {
+      const contributorCount = await drizzleClient
+        .select({ count: count(modContributors) })
+        .from(modContributors)
+        .where(eq(modContributors.modId, input.modId))
+      if (!contributorCount[0]?.count || contributorCount[0]?.count <= 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot remove last contributor",
+        })
+      }
+
+      await drizzleClient
+        .delete(modContributors)
+        .where(
+          and(
+            eq(modContributors.modId, input.modId),
+            eq(modContributors.userId, input.userId),
+          ),
+        )
+    }),
 })
 
 export default modsRouter
