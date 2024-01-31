@@ -11,9 +11,9 @@ import {
 } from "@beatmods/components/ui/dialog"
 import type GithubUser from "@beatmods/types/GithubUser"
 import { Pencil } from "lucide-react"
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import RemoveContributors from "./RemoveContributors"
+import AddContributors from "./AddContributors"
 
 interface Props {
   modId: string
@@ -26,18 +26,10 @@ export default function ContributorsEditor({
   modName,
   contributors,
 }: Props) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
   const router = useRouter()
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (open) setModalVisible(true)
-        setIsOpen(open)
-      }}
-    >
+    <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
           <Pencil size={20} />
@@ -55,6 +47,13 @@ export default function ContributorsEditor({
             modId={modId}
             contributors={contributors}
             onRemovalSuccess={() => {
+              router.refresh()
+            }}
+          />
+          <AddContributors
+            modId={modId}
+            contributors={contributors}
+            onAddSuccess={() => {
               router.refresh()
             }}
           />

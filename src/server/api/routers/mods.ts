@@ -407,11 +407,19 @@ const modsRouter = createTRPCRouter({
 
   addModContributor: modContributorProcedure
     .input(z.object({ modId: z.string(), userId: z.string() }))
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       await drizzleClient.insert(modContributors).values({
         modId: input.modId,
         userId: input.userId,
       })
+    }),
+
+  addMultipleModContributors: modContributorProcedure
+    .input(z.object({ modId: z.string(), userIds: z.array(z.string()) }))
+    .mutation(async ({ input }) => {
+      await drizzleClient
+        .insert(modContributors)
+        .values(input.userIds.map((userId) => ({ modId: input.modId, userId })))
     }),
 
   removeModContributor: modContributorProcedure
