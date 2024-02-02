@@ -25,7 +25,7 @@ export default async function ModDetails({
               {mod.category}
             </div>
           </div>
-          <div className="flex h-8 flex-row gap-2">
+          <div className="flex h-8 flex-row items-center gap-2">
             <Contributors contributors={mod.contributors} />
             {isContributor && (
               <ContributorsEditor
