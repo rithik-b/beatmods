@@ -32,19 +32,17 @@ import { Plus } from "lucide-react"
 import NewVersionSchema from "@beatmods/types/NewVersionSchema"
 import { getTRPCErrorFromUnknown } from "@trpc/server"
 
-interface UploadVersionContentProps {
+interface UploadVersionFormProps {
   modId: string
   gameVersions: GameVersion[]
   onUploadSuccess: () => void
-  onCloseAutoFocus: () => void
 }
 
-function UploadVersionContent({
+function UploadVersionForm({
   modId,
   gameVersions: allGameVersions,
   onUploadSuccess,
-  onCloseAutoFocus,
-}: UploadVersionContentProps) {
+}: UploadVersionFormProps) {
   const form = useForm<z.infer<typeof NewVersionSchema>>({
     resolver: zodResolver(NewVersionSchema),
     defaultValues: {
@@ -89,7 +87,7 @@ function UploadVersionContent({
   )
 
   return (
-    <DialogContent onCloseAutoFocus={onCloseAutoFocus}>
+    <>
       <DialogHeader>
         <DialogTitle>New Version</DialogTitle>
         <DialogDescription>Upload a new version of your mod</DialogDescription>
@@ -162,7 +160,7 @@ function UploadVersionContent({
           </Button>
         </form>
       </Form>
-    </DialogContent>
+    </>
   )
 }
 
@@ -176,14 +174,12 @@ export default function UploadVersion({
   gameVersions,
 }: UploadVersionProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
   const utils = api.useUtils()
 
   return (
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        if (open) setModalVisible(true)
         setIsOpen(open)
       }}
     >
@@ -192,19 +188,16 @@ export default function UploadVersion({
           <Plus /> Add new version
         </Button>
       </DialogTrigger>
-      {modalVisible && ( // Need to do this to reset the form when the modal is closed
-        <UploadVersionContent
+      <DialogContent>
+        <UploadVersionForm
           modId={modId}
           gameVersions={gameVersions}
           onUploadSuccess={() => {
             setIsOpen(false)
             void utils.mods.getModVersions.invalidate({ modId })
           }}
-          onCloseAutoFocus={() => {
-            setModalVisible(false)
-          }}
         />
-      )}
+      </DialogContent>
     </Dialog>
   )
 }
