@@ -13,7 +13,11 @@ import { cookies } from "next/headers"
 import superjson from "superjson"
 import { ZodError, z } from "zod"
 import drizzleClient from "../drizzleClient"
-import { githubUsersTable, modContributorsTable } from "@beatmods/types/drizzle"
+import {
+  githubUsersTable,
+  modContributorsTable,
+  modsTable,
+} from "@beatmods/types/drizzle"
 import { and, eq } from "drizzle-orm"
 import { count } from "drizzle-orm"
 
@@ -130,6 +134,17 @@ export const authenticatedProcedure = publicProcedure.use(async (opts) => {
 export const modContributorProcedure = authenticatedProcedure
   .input(z.object({ modId: z.string() }))
   .use(async (opts) => {
+    const modCount = (
+      await drizzleClient
+        .select({ modCount: count(modsTable) })
+        .from(modsTable)
+        .where(eq(modsTable.id, opts.input.modId))
+        .limit(1)
+    )?.[0]?.modCount
+
+    // If the mod doesn't exist, we don't need to check if the user is a contributor
+    if (modCount === 0) return opts.next(opts)
+
     const contributorsCount = (
       await drizzleClient
         .select({ count: count(modContributorsTable) })

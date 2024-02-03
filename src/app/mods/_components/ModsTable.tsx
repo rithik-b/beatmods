@@ -92,7 +92,7 @@ export default function ModsTable() {
       <div className="flex flex-col gap-5">
         <Skeleton className="h-10" />
         <div className="flex flex-col gap-1">
-          <Skeleton className="h-14" />
+          <Skeleton className="h-12" />
           <Skeleton className="h-96" />
         </div>
       </div>

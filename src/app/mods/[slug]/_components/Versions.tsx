@@ -10,29 +10,21 @@ import {
 } from "@beatmods/components/ui/card"
 import { api } from "@beatmods/trpc/react"
 import { Download } from "lucide-react"
-import UploadVersion from "./upload-version/UploadVersion"
-import type GameVersion from "@beatmods/types/GameVersion"
+import NewVersion from "./NewVersion"
 
 interface Props {
   modId: string
-  gameVersions: GameVersion[]
   isContributor: boolean
 }
 
-export default function Versions({
-  modId,
-  gameVersions,
-  isContributor,
-}: Props) {
+export default function Versions({ modId, isContributor }: Props) {
   const { data } = api.mods.versions.getVersionsForMod.useQuery({ modId })
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-row items-center justify-between">
         <h2 className="text-4xl">Versions</h2>
-        {isContributor && (
-          <UploadVersion modId={modId} gameVersions={gameVersions} />
-        )}
+        {isContributor && <NewVersion modId={modId} />}
       </div>
       {!!data &&
         data.map((version) => (

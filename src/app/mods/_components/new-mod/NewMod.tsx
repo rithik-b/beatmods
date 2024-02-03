@@ -22,13 +22,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@beatmods/components/ui/select"
+import { Suspense, useState } from "react"
+import { Loader2, Plus } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@beatmods/components/ui/dialog"
+import { getTRPCErrorFromUnknown } from "@trpc/server"
+import UploadVersion from "../upload-version/UploadVersion"
+import type NewVersionSchema from "@beatmods/types/NewVersionSchema"
 import { useRouter } from "next/navigation"
 
-interface Props {
-  categories: string[]
+interface NewModFormProps {
+  onError: (error: string | undefined) => void
+  onSuccess: (modDetails: z.infer<typeof newModSchema>) => void
 }
 
-export default function NewModForm({ categories }: Props) {
+function NewModForm({ onError, onSuccess }: NewModFormProps) {
+  const [categories] = api.categories.useSuspenseQuery()
   const form = useForm<z.infer<typeof newModSchema>>({
     resolver: zodResolver(newModSchema),
     defaultValues: {
@@ -39,19 +54,23 @@ export default function NewModForm({ categories }: Props) {
       category: categories[0],
     },
   })
-  const router = useRouter()
-  const { mutateAsync } = api.mods.createNew.useMutation()
+  const { mutateAsync } = api.mods.validateNew.useMutation()
 
   const onSubmit = async (values: z.infer<typeof newModSchema>) => {
-    const result = await mutateAsync(values)
-    router.push(`/mods/${result}`)
+    onError(undefined)
+    try {
+      await mutateAsync(values)
+      onSuccess(values)
+    } catch (e) {
+      onError(getTRPCErrorFromUnknown(e).message)
+    }
   }
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 rounded-xl border-2 border-border bg-card p-5 text-card-foreground"
+        className="flex flex-col gap-5"
       >
         <FormField
           control={form.control}
@@ -133,9 +152,75 @@ export default function NewModForm({ categories }: Props) {
           isLoading={form.formState.isSubmitting}
           className="w-full"
         >
-          Create
+          Next
         </Button>
       </form>
     </Form>
+  )
+}
+
+export default function NewMod() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [error, setError] = useState<string | undefined>(undefined)
+  const [modDetails, setModDetails] = useState<
+    z.infer<typeof newModSchema> | undefined
+  >(undefined)
+  const { mutateAsync } = api.mods.createNew.useMutation()
+  const router = useRouter()
+
+  const onUploadSuccess = async (
+    modVersion: z.infer<typeof NewVersionSchema>,
+  ) => {
+    try {
+      const response = await mutateAsync({
+        mod: modDetails!,
+        version: modVersion,
+      })
+      setIsOpen(false)
+      router.push(`/mods/${response}`)
+    } catch (e) {
+      setError(getTRPCErrorFromUnknown(e).message)
+    }
+  }
+
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open)
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button className="flex flex-row items-center gap-2">
+          <Plus /> Create new mod
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>New Mod</DialogTitle>
+          <DialogDescription>Create a new mod</DialogDescription>
+          <DialogDescription className="text-destructive">
+            {!!error && error}
+          </DialogDescription>
+        </DialogHeader>
+        <Suspense
+          fallback={
+            <div className="flex w-full items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          }
+        >
+          {!modDetails ? (
+            <NewModForm onError={setError} onSuccess={setModDetails} />
+          ) : (
+            <UploadVersion
+              modId={modDetails.id}
+              onUploadSuccess={onUploadSuccess}
+              onError={setError}
+            />
+          )}
+        </Suspense>
+      </DialogContent>
+    </Dialog>
   )
 }

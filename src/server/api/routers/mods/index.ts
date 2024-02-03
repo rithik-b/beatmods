@@ -18,30 +18,54 @@ import {
   modsTable,
 } from "@beatmods/types/drizzle"
 import { and, count, eq, max, sql } from "drizzle-orm"
-import versionsRouter from "./versions"
+import versionsRouter, { createNewModVersion } from "./versions"
+import NewVersionSchema from "@beatmods/types/NewVersionSchema"
 
 const modsRouter = createTRPCRouter({
-  createNew: authenticatedProcedure
+  validateNew: authenticatedProcedure
     .input(NewModSchema)
+    .mutation(async ({ input }) => {
+      const potentialDuplicateCount = (
+        await drizzleClient
+          .select({ count: count(modsTable) })
+          .from(modsTable)
+          .where(eq(modsTable.id, input.id))
+      )?.[0]?.count
+
+      if (potentialDuplicateCount && potentialDuplicateCount > 0) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `Mod with id "${input.id}" already exists`,
+        })
+      }
+    }),
+
+  createNew: authenticatedProcedure
+    .input(
+      z.object({
+        mod: NewModSchema,
+        version: NewVersionSchema,
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const insertResult = await drizzleClient.transaction(async (trx) => {
         const result = await trx
           .insert(modsTable)
           .values({
-            id: input.id,
-            name: input.name,
-            description: !input.description ? null! : input.description,
-            category: input.category,
-            moreInfoUrl: input.moreInfoUrl,
-            slug: createSlug(input.id),
+            id: input.mod.id,
+            name: input.mod.name,
+            description: !input.mod.description ? null : input.mod.description,
+            category: input.mod.category,
+            moreInfoUrl: input.mod.moreInfoUrl,
+            slug: createSlug(input.mod.id),
           })
-          .returning({ id: modsTable.id })
+          .returning({ id: modsTable.id, slug: modsTable.slug })
           .onConflictDoNothing({ target: modsTable.id })
 
         if (!result[0]?.id) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: `Mod with id "${input.id}" already exists`,
+            message: `Mod with id "${input.mod.id}" already exists`,
           })
         }
 
@@ -50,10 +74,12 @@ const modsRouter = createTRPCRouter({
           userId: ctx.user.id,
         })
 
+        await createNewModVersion(input.version, trx)
+
         return result
       })
 
-      return insertResult[0]!.id
+      return insertResult[0]!.slug
     }),
 
   modBySlug: publicProcedure.input(z.string()).query(async ({ input }) => {

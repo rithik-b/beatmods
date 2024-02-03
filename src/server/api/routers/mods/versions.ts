@@ -17,6 +17,45 @@ import {
   publicProcedure,
 } from "../../trpc"
 
+export async function createNewModVersion(
+  input: z.infer<typeof NewVersionSchema>,
+  trx: Parameters<Parameters<typeof drizzleClient.transaction>[0]>[0],
+) {
+  const { modId, version, supportedGameVersionIds, dependencies } = input
+
+  const { data: downloadUrl } = supabaseServiceRoleClient.storage
+    .from("mods")
+    .getPublicUrl(`${modId}/${modId}_${version}.zip`)
+
+  const modVersionId = (
+    await trx
+      .insert(modVersionsTable)
+      .values({
+        modId,
+        version,
+        downloadUrl: downloadUrl.publicUrl,
+      })
+      .returning({ id: modVersionsTable.id })
+  )[0]!.id
+
+  await trx.insert(modVersionSupportedGameVersionsTable).values(
+    supportedGameVersionIds.map((gameVersionId) => ({
+      modVersionId,
+      gameVersionId,
+    })),
+  )
+
+  if (dependencies.length !== 0) {
+    await trx.insert(modVersionDependenciesTable).values(
+      dependencies.map((dependency) => ({
+        modVersionsId: modVersionId,
+        dependencyId: dependency.id,
+        semver: dependency.version,
+      })),
+    )
+  }
+}
+
 const versionsRouter = createTRPCRouter({
   getVersionsForMod: publicProcedure
     .input(z.object({ modId: z.string() }))
@@ -162,24 +201,9 @@ const versionsRouter = createTRPCRouter({
       const { modId, version } = input
 
       // Need to do the following validations
-      // - Mod exists
       // - Mod version doesn't already exist
       // - Game version exists
       // - TODO Dependencies exist for the current game version
-
-      const modCount = (
-        await drizzleClient
-          .select({ modCount: count(modsTable) })
-          .from(modsTable)
-          .where(eq(modsTable.id, modId))
-          .limit(1)
-      )?.[0]?.modCount
-
-      if (modCount === 0)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Mod does not exist",
-        })
 
       const modVersionCount = (
         await drizzleClient
@@ -214,6 +238,10 @@ const versionsRouter = createTRPCRouter({
           message: "Game version does not exist",
         })
 
+      await supabaseServiceRoleClient.storage
+        .from("mods")
+        .remove([`${modId}/${modId}_${version}.zip`])
+
       return await supabaseServiceRoleClient.storage
         .from("mods")
         .createSignedUploadUrl(`${modId}/${modId}_${version}.zip`)
@@ -221,40 +249,8 @@ const versionsRouter = createTRPCRouter({
   createNew: modContributorProcedure
     .input(NewVersionSchema)
     .mutation(async ({ input }) => {
-      const { modId, version, supportedGameVersionIds, dependencies } = input
-
-      const { data: downloadUrl } = supabaseServiceRoleClient.storage
-        .from("mods")
-        .getPublicUrl(`${modId}/${modId}_${version}.zip`)
-
       await drizzleClient.transaction(async (trx) => {
-        const modVersionId = (
-          await trx
-            .insert(modVersionsTable)
-            .values({
-              modId,
-              version,
-              downloadUrl: downloadUrl.publicUrl,
-            })
-            .returning({ id: modVersionsTable.id })
-        )[0]!.id
-
-        await trx.insert(modVersionSupportedGameVersionsTable).values(
-          supportedGameVersionIds.map((gameVersionId) => ({
-            modVersionId,
-            gameVersionId,
-          })),
-        )
-
-        if (dependencies.length !== 0) {
-          await trx.insert(modVersionDependenciesTable).values(
-            dependencies.map((dependency) => ({
-              modVersionsId: modVersionId,
-              dependencyId: dependency.id,
-              semver: dependency.version,
-            })),
-          )
-        }
+        await createNewModVersion(input, trx)
       })
     }),
 })
