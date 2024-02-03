@@ -6,7 +6,8 @@ import { Laptop, Loader2, Moon, Sun } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@beatmods/components/ui/dropdown-menu"
 import { useEffect, useState } from "react"
@@ -39,28 +40,25 @@ export default function ThemeToggle() {
           Theme
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="flex flex-col gap-2 rounded-md border">
-        <DropdownMenuItem
-          className="flex flex-row gap-1"
-          onClick={() => setTheme("system")}
+      <DropdownMenuContent>
+        <DropdownMenuRadioGroup
+          className="flex flex-col gap-2"
+          value={theme}
+          onValueChange={setTheme}
         >
-          <Laptop className="h-4 w-4" />
-          System
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex flex-row gap-1"
-          onClick={() => setTheme("dark")}
-        >
-          <Moon className="h-4 w-4" />
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex flex-row gap-1"
-          onClick={() => setTheme("light")}
-        >
-          <Sun className="h-4 w-4" />
-          Light
-        </DropdownMenuItem>
+          <DropdownMenuRadioItem className="flex flex-row gap-1" value="system">
+            <Laptop className="h-4 w-4" />
+            System
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem className="flex flex-row gap-1" value="dark">
+            <Moon className="h-4 w-4" />
+            Dark
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem className="flex flex-row gap-1" value="light">
+            <Sun className="h-4 w-4" />
+            Light
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )
