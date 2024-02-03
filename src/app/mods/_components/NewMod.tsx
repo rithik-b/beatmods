@@ -180,8 +180,8 @@ export default function NewMod() {
         mod: modDetails!,
         version: modVersion,
       })
-      setIsOpen(false)
       router.push(`/mods/${response}`)
+      setIsOpen(false)
     } catch (e) {
       setError(getTRPCErrorFromUnknown(e).message)
     }
