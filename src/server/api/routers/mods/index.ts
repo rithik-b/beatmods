@@ -23,29 +23,39 @@ import versionsRouter from "./versions"
 const modsRouter = createTRPCRouter({
   createNew: authenticatedProcedure
     .input(NewModSchema)
-    .mutation(async ({ input }) => {
-      const insertResult = await drizzleClient
-        .insert(mods)
-        .values({
-          id: input.id,
-          name: input.name,
-          description: !input.description ? null! : input.description,
-          category: input.category,
-          moreInfoUrl: input.moreInfoUrl,
-          slug: createSlug(input.id),
-        })
-        .returning({ id: mods.id })
-        .onConflictDoNothing({ target: mods.id })
+    .mutation(async ({ ctx, input }) => {
+      const insertResult = await drizzleClient.transaction(async (trx) => {
+        const result = await trx
+          .insert(mods)
+          .values({
+            id: input.id,
+            name: input.name,
+            description: !input.description ? null! : input.description,
+            category: input.category,
+            moreInfoUrl: input.moreInfoUrl,
+            slug: createSlug(input.id),
+          })
+          .returning({ id: mods.id })
+          .onConflictDoNothing({ target: mods.id })
 
-      if (!insertResult[0]?.id) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: `Mod with id "${input.id}" already exists`,
-        })
-      }
+        if (!result[0]?.id) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `Mod with id "${input.id}" already exists`,
+          })
+        }
 
-      return insertResult[0].id
+        await trx.insert(modContributors).values({
+          modId: result[0].id,
+          userId: ctx.user.id,
+        })
+
+        return result
+      })
+
+      return insertResult[0]!.id
     }),
+
   modBySlug: publicProcedure.input(z.string()).query(async ({ input }) => {
     const mod = (
       await drizzleClient
