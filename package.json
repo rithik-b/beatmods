@@ -10,8 +10,8 @@
     "start": "next start",
     "supabase": "supabase start -x edge-runtime,imgproxy,postgres-meta,studio",
     "supabase:studio": "supabase start -x edge-runtime,imgproxy",
-    "migrate": "tsx drizzle/migrate.ts",
-    "seed": "tsx drizzle/seed.ts"
+    "migrate": "dotenv -- tsx drizzle/migrate.ts",
+    "seed": "dotenv -- tsx drizzle/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
