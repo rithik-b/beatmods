@@ -7,6 +7,7 @@ import {
   gameVersionsTable,
   githubUsersTable,
 } from "@beatmods/types/drizzle"
+import { desc } from "drizzle-orm"
 
 /**
  * This is the primary router for your server.
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
     const gameVersionsResult = await drizzleClient
       .select()
       .from(gameVersionsTable)
+      .orderBy(desc(gameVersionsTable.version))
     return gameVersionsResult
   }),
   allUsers: publicProcedure.query(async () => {
