@@ -53,7 +53,7 @@ const modsRouter = createTRPCRouter({
           .insert(modsTable)
           .values({
             id: input.mod.id,
-            name: input.mod.name ?? input.mod.id,
+            name: !!input.mod.name ? input.mod.name : input.mod.id,
             description: !input.mod.description ? null : input.mod.description,
             category: input.mod.category,
             moreInfoUrl: input.mod.moreInfoUrl,
