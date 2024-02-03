@@ -28,6 +28,10 @@ export default function ContributorsEditor({
 }: Props) {
   const router = useRouter()
 
+  const refreshData = () => {
+    router.refresh()
+  }
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -39,23 +43,19 @@ export default function ContributorsEditor({
         <DialogHeader>
           <DialogTitle>Contributors</DialogTitle>
           <DialogDescription>
-            Modifiy the contributors for {modName}
+            Modify the contributors for {modName}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-5">
           <RemoveContributors
             modId={modId}
             contributors={contributors}
-            onRemovalSuccess={() => {
-              router.refresh()
-            }}
+            onRemovalSuccess={refreshData}
           />
           <AddContributors
             modId={modId}
             contributors={contributors}
-            onAddSuccess={() => {
-              router.refresh()
-            }}
+            onAddSuccess={refreshData}
           />
         </div>
       </DialogContent>

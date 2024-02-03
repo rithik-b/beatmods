@@ -28,13 +28,24 @@ export default function AddContributors({
   contributors,
   onAddSuccess,
 }: Props) {
-  const mutation = api.mods.addMultipleModContributors.useMutation()
+  const { mutateAsync } = api.mods.addMultipleModContributors.useMutation()
   const { data } = api.allUsers.useQuery()
   const [isOpen, setIsOpen] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [inputValue, setInputValue] = useState("")
 
+  const addUsers = async () => {
+    try {
+      await mutateAsync({ modId, userIds: selectedUsers })
+      setIsOpen(false)
+      onAddSuccess()
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   if (!data) {
+    // TODO stream data in
     return null
   }
 
@@ -88,10 +99,7 @@ export default function AddContributors({
                   }}
                 >
                   <div className="flex flex-row items-center gap-x-2">
-                    <GithubAvatar
-                      githubUser={user}
-                      className="h-6 w-6 text-xs"
-                    />
+                    <GithubAvatar githubUser={user} size="small" />
                     <span className="text-sm">
                       {getNameForGithubUser(user)}
                     </span>
@@ -99,18 +107,7 @@ export default function AddContributors({
                 </CommandItem>
               ))}
           </TagInput>
-          <Button
-            disabled={selectedUsers.length === 0}
-            onClick={async () => {
-              try {
-                await mutation.mutateAsync({ modId, userIds: selectedUsers })
-                setIsOpen(false)
-                onAddSuccess()
-              } catch (e) {
-                console.log(e)
-              }
-            }}
-          >
+          <Button disabled={selectedUsers.length === 0} onClick={addUsers}>
             Add
           </Button>
         </div>

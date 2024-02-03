@@ -15,7 +15,7 @@ export default function Contributors({ contributors }: Props) {
       <div className="flex flex-row items-center gap-1">
         <div className="flex flex-row items-center gap-0.5">
           {contributors.map((c) => (
-            <GithubAvatar githubUser={c} className="h-8 w-8" key={c.id} />
+            <GithubAvatar githubUser={c} key={c.id} />
           ))}
         </div>
         <span className="text-md">
@@ -32,11 +32,7 @@ export default function Contributors({ contributors }: Props) {
       <HoverCardTrigger className="w-fit cursor-default transition-all duration-200 hover:scale-105 hover:font-medium">
         <div className="flex w-fit flex-row items-center gap-1">
           <div className="flex flex-row items-center gap-0.5">
-            <GithubAvatar
-              githubUser={first!}
-              className="h-8 w-8"
-              key={first!.id}
-            />
+            <GithubAvatar githubUser={first!} key={first!.id} />
             <Avatar className="h-8 w-8">
               <AvatarImage src={undefined} />
               <AvatarFallback>+{rest.length}</AvatarFallback>
@@ -53,7 +49,7 @@ export default function Contributors({ contributors }: Props) {
         <div className="flex flex-col gap-1">
           {contributors.map((c) => (
             <div className="flex flex-row items-center gap-1" key={c.id}>
-              <GithubAvatar githubUser={c} className="h-6 w-6 text-xs" />
+              <GithubAvatar githubUser={c} size="small" />
               <span className="text-sm">{getNameForGithubUser(c)}</span>
             </div>
           ))}
