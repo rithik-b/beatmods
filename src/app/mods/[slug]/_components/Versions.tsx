@@ -24,7 +24,7 @@ export default function Versions({
   gameVersions,
   isContributor,
 }: Props) {
-  const { data } = api.mods.getModVersions.useQuery({ modId })
+  const { data } = api.mods.versions.getVersionsForMod.useQuery({ modId })
 
   return (
     <div className="flex flex-col gap-5">

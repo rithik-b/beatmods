@@ -28,7 +28,7 @@ export default function AddContributors({
   contributors,
   onAddSuccess,
 }: Props) {
-  const { mutateAsync } = api.mods.addMultipleModContributors.useMutation()
+  const { mutateAsync } = api.mods.addModContributors.useMutation()
   const { data } = api.allUsers.useQuery()
   const [isOpen, setIsOpen] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])

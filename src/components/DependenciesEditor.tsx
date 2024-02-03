@@ -60,10 +60,13 @@ export default function DependenciesEditor({
   onFocus,
   onBlur,
 }: Props) {
-  const { data } = api.mods.getModsForGameVersions.useQuery(gameVersionIds, {
-    enabled: gameVersionIds.length > 0,
-    refetchOnMount: false,
-  })
+  const { data } = api.mods.versions.getModsForGameVersions.useQuery(
+    gameVersionIds,
+    {
+      enabled: gameVersionIds.length > 0,
+      refetchOnMount: false,
+    },
+  )
 
   const monaco = useMonaco()
   const { resolvedTheme } = useTheme()

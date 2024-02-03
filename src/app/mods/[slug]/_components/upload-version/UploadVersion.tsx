@@ -57,9 +57,9 @@ function UploadVersionForm({
   >([])
   const [modFile, setModFile] = useState<File | undefined>(undefined)
   const { mutateAsync: getUploadUrlAsync } =
-    api.mods.getUploadUrlForNewModVersion.useMutation()
+    api.mods.versions.getUploadUrl.useMutation()
   const { mutateAsync: createNewModVersionAsync } =
-    api.mods.createNewModVersion.useMutation()
+    api.mods.versions.createNew.useMutation()
   const [submitError, setSubmitError] = useState<string | undefined>(undefined)
 
   const onSubmit = async (formData: z.infer<typeof NewVersionSchema>) => {
@@ -194,7 +194,7 @@ export default function UploadVersion({
           gameVersions={gameVersions}
           onUploadSuccess={() => {
             setIsOpen(false)
-            void utils.mods.getModVersions.invalidate({ modId })
+            void utils.mods.versions.getVersionsForMod.invalidate({ modId })
           }}
         />
       </DialogContent>
