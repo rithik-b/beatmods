@@ -3,10 +3,10 @@ import userRouter from "@beatmods/server/api/routers/user"
 import modsRouter from "@beatmods/server/api/routers/mods"
 import drizzleClient from "../drizzleClient"
 import {
-  categories,
-  gameVersions,
-  githubUsers,
-} from "@beatmods/types/autogen/drizzle"
+  categoriesTable,
+  gameVersionsTable,
+  githubUsersTable,
+} from "@beatmods/types/drizzle"
 
 /**
  * This is the primary router for your server.
@@ -18,16 +18,18 @@ export const appRouter = createTRPCRouter({
   mods: modsRouter,
   categories: publicProcedure.query(async () => {
     const categoriesResult = await drizzleClient
-      .select({ name: categories.name })
-      .from(categories)
+      .select({ name: categoriesTable.name })
+      .from(categoriesTable)
     return categoriesResult?.map((category) => category.name)
   }),
   gameVersions: publicProcedure.query(async () => {
-    const gameVersionsResult = await drizzleClient.select().from(gameVersions)
+    const gameVersionsResult = await drizzleClient
+      .select()
+      .from(gameVersionsTable)
     return gameVersionsResult
   }),
   allUsers: publicProcedure.query(async () => {
-    const users = await drizzleClient.select().from(githubUsers)
+    const users = await drizzleClient.select().from(githubUsersTable)
     return users
   }),
 })

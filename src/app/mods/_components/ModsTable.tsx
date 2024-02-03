@@ -89,13 +89,12 @@ export default function ModsTable() {
 
   if (!mods)
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-5">
         <Skeleton className="h-10" />
-        <Skeleton className="h-14" />
-        <Skeleton className="h-14" />
-        <Skeleton className="h-14" />
-        <Skeleton className="h-14" />
-        <Skeleton className="h-14" />
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-14" />
+          <Skeleton className="h-96" />
+        </div>
       </div>
     )
 

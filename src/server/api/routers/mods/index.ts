@@ -10,13 +10,13 @@ import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import drizzleClient from "@beatmods/server/drizzleClient"
 import {
-  gameVersions,
-  githubUsers,
-  modContributors,
-  modVersionSupportedGameVersions,
-  modVersions,
-  mods,
-} from "@beatmods/types/autogen/drizzle"
+  gameVersionsTable,
+  githubUsersTable,
+  modContributorsTable,
+  modVersionSupportedGameVersionsTable,
+  modVersionsTable,
+  modsTable,
+} from "@beatmods/types/drizzle"
 import { and, count, eq, max, sql } from "drizzle-orm"
 import versionsRouter from "./versions"
 
@@ -26,7 +26,7 @@ const modsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const insertResult = await drizzleClient.transaction(async (trx) => {
         const result = await trx
-          .insert(mods)
+          .insert(modsTable)
           .values({
             id: input.id,
             name: input.name,
@@ -35,8 +35,8 @@ const modsRouter = createTRPCRouter({
             moreInfoUrl: input.moreInfoUrl,
             slug: createSlug(input.id),
           })
-          .returning({ id: mods.id })
-          .onConflictDoNothing({ target: mods.id })
+          .returning({ id: modsTable.id })
+          .onConflictDoNothing({ target: modsTable.id })
 
         if (!result[0]?.id) {
           throw new TRPCError({
@@ -45,7 +45,7 @@ const modsRouter = createTRPCRouter({
           })
         }
 
-        await trx.insert(modContributors).values({
+        await trx.insert(modContributorsTable).values({
           modId: result[0].id,
           userId: ctx.user.id,
         })
@@ -60,8 +60,8 @@ const modsRouter = createTRPCRouter({
     const mod = (
       await drizzleClient
         .select()
-        .from(mods)
-        .where(eq(mods.slug, input))
+        .from(modsTable)
+        .where(eq(modsTable.slug, input))
         .limit(1)
     )?.[0]
 
@@ -73,15 +73,18 @@ const modsRouter = createTRPCRouter({
 
     const contributors = await drizzleClient
       .select({
-        id: githubUsers.id,
-        name: githubUsers.name,
-        userName: githubUsers.userName,
-        avatarUrl: githubUsers.avatarUrl,
-        createdAt: githubUsers.createdAt,
+        id: githubUsersTable.id,
+        name: githubUsersTable.name,
+        userName: githubUsersTable.userName,
+        avatarUrl: githubUsersTable.avatarUrl,
+        createdAt: githubUsersTable.createdAt,
       })
-      .from(githubUsers)
-      .leftJoin(modContributors, eq(modContributors.userId, githubUsers.id))
-      .where(eq(modContributors.modId, mod.id))
+      .from(githubUsersTable)
+      .leftJoin(
+        modContributorsTable,
+        eq(modContributorsTable.userId, githubUsersTable.id),
+      )
+      .where(eq(modContributorsTable.modId, mod.id))
 
     return {
       ...mod,
@@ -100,36 +103,48 @@ const modsRouter = createTRPCRouter({
       const { gameVersion, search } = input
       const unAggregatedMods = await drizzleClient
         .select({
-          id: mods.id,
-          name: mods.name,
-          slug: mods.slug,
-          category: mods.category,
-          contributor: githubUsers,
-          supportedGameVersion: gameVersions.version,
-          latestVersion: max(modVersions.version),
+          id: modsTable.id,
+          name: modsTable.name,
+          slug: modsTable.slug,
+          category: modsTable.category,
+          contributor: githubUsersTable,
+          supportedGameVersion: gameVersionsTable.version,
+          latestVersion: max(modVersionsTable.version),
         })
-        .from(mods)
-        .leftJoin(modContributors, eq(modContributors.modId, mods.id))
-        .leftJoin(githubUsers, eq(githubUsers.id, modContributors.userId))
-        .leftJoin(modVersions, eq(modVersions.modId, mods.id))
+        .from(modsTable)
         .leftJoin(
-          modVersionSupportedGameVersions,
-          eq(modVersionSupportedGameVersions.modVersionId, modVersions.id),
+          modContributorsTable,
+          eq(modContributorsTable.modId, modsTable.id),
         )
         .leftJoin(
-          gameVersions,
-          eq(gameVersions.id, modVersionSupportedGameVersions.gameVersionId),
+          githubUsersTable,
+          eq(githubUsersTable.id, modContributorsTable.userId),
+        )
+        .leftJoin(modVersionsTable, eq(modVersionsTable.modId, modsTable.id))
+        .leftJoin(
+          modVersionSupportedGameVersionsTable,
+          eq(
+            modVersionSupportedGameVersionsTable.modVersionId,
+            modVersionsTable.id,
+          ),
+        )
+        .leftJoin(
+          gameVersionsTable,
+          eq(
+            gameVersionsTable.id,
+            modVersionSupportedGameVersionsTable.gameVersionId,
+          ),
         )
         .where(
           and(
-            eq(gameVersions.version, gameVersion),
+            eq(gameVersionsTable.version, gameVersion),
             // TODO improve search
             !!search
-              ? sql`${search} % ANY(STRING_TO_ARRAY(${mods.name},' '))`
+              ? sql`${search} % ANY(STRING_TO_ARRAY(${modsTable.name},' '))`
               : sql`TRUE`,
           ),
         )
-        .groupBy(mods.id, githubUsers.id, gameVersions.id)
+        .groupBy(modsTable.id, githubUsersTable.id, gameVersionsTable.id)
 
       const aggregatedMods = unAggregatedMods.reduce(
         (acc, mod) => {
@@ -193,7 +208,7 @@ const modsRouter = createTRPCRouter({
     .input(z.object({ modId: z.string(), userIds: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       await drizzleClient
-        .insert(modContributors)
+        .insert(modContributorsTable)
         .values(input.userIds.map((userId) => ({ modId: input.modId, userId })))
     }),
 
@@ -201,9 +216,9 @@ const modsRouter = createTRPCRouter({
     .input(z.object({ modId: z.string(), userId: z.string() }))
     .mutation(async ({ input }) => {
       const contributorCount = await drizzleClient
-        .select({ count: count(modContributors) })
-        .from(modContributors)
-        .where(eq(modContributors.modId, input.modId))
+        .select({ count: count(modContributorsTable) })
+        .from(modContributorsTable)
+        .where(eq(modContributorsTable.modId, input.modId))
 
       if (!contributorCount[0]?.count || contributorCount[0]?.count <= 1) {
         throw new TRPCError({
@@ -213,11 +228,11 @@ const modsRouter = createTRPCRouter({
       }
 
       await drizzleClient
-        .delete(modContributors)
+        .delete(modContributorsTable)
         .where(
           and(
-            eq(modContributors.modId, input.modId),
-            eq(modContributors.userId, input.userId),
+            eq(modContributorsTable.modId, input.modId),
+            eq(modContributorsTable.userId, input.userId),
           ),
         )
     }),

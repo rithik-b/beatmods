@@ -7,14 +7,13 @@
  * need to use are documented accordingly near the end.
  */
 import { env } from "@beatmods/env"
-import { type Database } from "@beatmods/types/autogen/supabase"
 import { type CookieOptions, createServerClient } from "@supabase/ssr"
 import { TRPCError, initTRPC } from "@trpc/server"
 import { cookies } from "next/headers"
 import superjson from "superjson"
 import { ZodError, z } from "zod"
 import drizzleClient from "../drizzleClient"
-import { githubUsers, modContributors } from "@beatmods/types/autogen/drizzle"
+import { githubUsersTable, modContributorsTable } from "@beatmods/types/drizzle"
 import { and, eq } from "drizzle-orm"
 import { count } from "drizzle-orm"
 
@@ -32,7 +31,7 @@ import { count } from "drizzle-orm"
  */
 export const createTRPCContext = async (isSSR?: boolean) => {
   const cookieStore = cookies()
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
@@ -113,8 +112,8 @@ export const authenticatedProcedure = publicProcedure.use(async (opts) => {
   const user = (
     await drizzleClient
       .select()
-      .from(githubUsers)
-      .where(eq(githubUsers.id, data.user.id))
+      .from(githubUsersTable)
+      .where(eq(githubUsersTable.id, data.user.id))
       .limit(1)
   )?.[0]
 
@@ -133,12 +132,12 @@ export const modContributorProcedure = authenticatedProcedure
   .use(async (opts) => {
     const contributorsCount = (
       await drizzleClient
-        .select({ count: count(modContributors) })
-        .from(modContributors)
+        .select({ count: count(modContributorsTable) })
+        .from(modContributorsTable)
         .where(
           and(
-            eq(modContributors.modId, opts.input.modId),
-            eq(modContributors.userId, opts.ctx.user.id),
+            eq(modContributorsTable.modId, opts.input.modId),
+            eq(modContributorsTable.userId, opts.ctx.user.id),
           ),
         )
     )?.[0]?.count

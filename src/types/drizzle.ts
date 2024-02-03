@@ -5,8 +5,8 @@ import {
   uuid,
   text,
   boolean,
-  foreignKey,
   timestamp,
+  pgSchema,
 } from "drizzle-orm/pg-core"
 
 export const keyStatus = pgEnum("key_status", [
@@ -41,7 +41,7 @@ export const codeChallengeMethod = pgEnum("code_challenge_method", [
   "plain",
 ])
 
-export const categories = pgTable(
+export const categoriesTable = pgTable(
   "categories",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -55,7 +55,7 @@ export const categories = pgTable(
   },
 )
 
-export const gameVersions = pgTable(
+export const gameVersionsTable = pgTable(
   "game_versions",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -71,8 +71,18 @@ export const gameVersions = pgTable(
   },
 )
 
-export const githubUsers = pgTable("github_users", {
+const users = pgSchema("auth").table("users", {
   id: uuid("id").primaryKey().notNull(),
+})
+
+export const githubUsersTable = pgTable("github_users", {
+  id: uuid("id")
+    .primaryKey()
+    .notNull()
+    .references(() => users.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
     .defaultNow()
     .notNull(),
@@ -81,54 +91,66 @@ export const githubUsers = pgTable("github_users", {
   avatarUrl: text("avatar_url"),
 })
 
-export const modContributors = pgTable("mod_contributors", {
+export const modContributorsTable = pgTable("mod_contributors", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   modId: text("mod_id")
     .notNull()
-    .references(() => mods.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    .references(() => modsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   userId: uuid("user_id")
     .notNull()
-    .references(() => githubUsers.id, {
+    .references(() => githubUsersTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
 })
 
-export const modVersionDependencies = pgTable("mod_version_dependencies", {
+export const modVersionDependenciesTable = pgTable("mod_version_dependencies", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   modVersionsId: uuid("mod_versions_id")
     .notNull()
-    .references(() => modVersions.id, {
+    .references(() => modVersionsTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
   semver: text("semver").notNull(),
   dependencyId: text("dependency_id")
     .notNull()
-    .references(() => mods.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    .references(() => modsTable.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
 })
 
-export const modVersionSupportedGameVersions = pgTable(
+export const modVersionSupportedGameVersionsTable = pgTable(
   "mod_version_supported_game_versions",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     modVersionId: uuid("mod_version_id")
       .notNull()
-      .references(() => modVersions.id, {
+      .references(() => modVersionsTable.id, {
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    gameVersionId: uuid("game_version_id").references(() => gameVersions.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
+    gameVersionId: uuid("game_version_id").references(
+      () => gameVersionsTable.id,
+      {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      },
+    ),
   },
 )
 
-export const modVersions = pgTable("mod_versions", {
+export const modVersionsTable = pgTable("mod_versions", {
   modId: text("mod_id")
     .notNull()
-    .references(() => mods.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    .references(() => modsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
     .defaultNow()
     .notNull(),
@@ -137,7 +159,7 @@ export const modVersions = pgTable("mod_versions", {
   downloadUrl: text("download_url").notNull(),
 })
 
-export const mods = pgTable(
+export const modsTable = pgTable(
   "mods",
   {
     id: text("id").primaryKey().notNull(),
@@ -150,7 +172,7 @@ export const mods = pgTable(
       .notNull(),
     category: text("category")
       .notNull()
-      .references(() => categories.name, {
+      .references(() => categoriesTable.name, {
         onDelete: "restrict",
         onUpdate: "cascade",
       }),

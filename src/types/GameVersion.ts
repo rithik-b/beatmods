@@ -1,5 +1,6 @@
-import { type Database } from "@beatmods/types/autogen/supabase"
+import { type InferSelectModel } from "drizzle-orm"
+import { type gameVersionsTable } from "./drizzle"
 
-type GameVersion = Database["public"]["Tables"]["game_versions"]["Row"]
+type GameVersion = InferSelectModel<typeof gameVersionsTable>
 
 export default GameVersion
