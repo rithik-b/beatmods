@@ -12,9 +12,13 @@ export default async function ModDetails({
   const { slug } = params
   try {
     const mod = await api.mods.modBySlug.query(slug)
-    const currentUser = await api.user.user.query()
-    const isContributor = mod.contributors.some((c) => c.id === currentUser?.id)
     const gameVersions = await api.gameVersions.query()
+    let isContributor = false
+
+    try {
+      const currentUser = await api.user.user.query()
+      isContributor = mod.contributors.some((c) => c.id === currentUser?.id)
+    } catch (e) {}
 
     return (
       <div className="flex h-full flex-col gap-5">
