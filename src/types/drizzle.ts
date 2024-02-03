@@ -76,7 +76,7 @@ const users = pgSchema("auth").table("users", {
 })
 
 export const githubUsersTable = pgTable("github_users", {
-  id: uuid("id").primaryKey().notNull(),
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
   authId: uuid("auth_id").references(() => users.id, {
     // Seperate and optional for seeding mock data
     onDelete: "cascade",

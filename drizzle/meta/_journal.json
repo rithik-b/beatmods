@@ -22,6 +22,13 @@
       "when": 1706974476542,
       "tag": "0002_awesome_star_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1706975123578,
+      "tag": "0003_lethal_phalanx",
+      "breakpoints": true
     }
   ]
 }
