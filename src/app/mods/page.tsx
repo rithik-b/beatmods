@@ -1,5 +1,5 @@
 import ModsTable from "./_components/ModsTable"
-import NewMod from "./_components/new-mod/NewMod"
+import NewMod from "./_components/NewMod"
 
 export default async function Mods() {
   return (

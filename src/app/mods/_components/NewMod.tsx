@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { type z } from "zod"
 import { useForm } from "react-hook-form"
 import { api } from "@beatmods/trpc/react"
-import newModSchema from "@beatmods/types/NewModSchema"
+import NewModSchema from "@beatmods/types/NewModSchema"
 import {
   Select,
   SelectContent,
@@ -33,19 +33,19 @@ import {
   DialogTrigger,
 } from "@beatmods/components/ui/dialog"
 import { getTRPCErrorFromUnknown } from "@trpc/server"
-import UploadVersion from "../upload-version/UploadVersion"
+import UploadVersion from "./upload-version/UploadVersion"
 import type NewVersionSchema from "@beatmods/types/NewVersionSchema"
 import { useRouter } from "next/navigation"
 
 interface NewModFormProps {
   onError: (error: string | undefined) => void
-  onSuccess: (modDetails: z.infer<typeof newModSchema>) => void
+  onSuccess: (modDetails: z.infer<typeof NewModSchema>) => void
 }
 
 function NewModForm({ onError, onSuccess }: NewModFormProps) {
   const [categories] = api.categories.useSuspenseQuery()
-  const form = useForm<z.infer<typeof newModSchema>>({
-    resolver: zodResolver(newModSchema),
+  const form = useForm<z.infer<typeof NewModSchema>>({
+    resolver: zodResolver(NewModSchema),
     defaultValues: {
       id: "",
       name: "",
@@ -56,7 +56,7 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
   })
   const { mutateAsync } = api.mods.validateNew.useMutation()
 
-  const onSubmit = async (values: z.infer<typeof newModSchema>) => {
+  const onSubmit = async (values: z.infer<typeof NewModSchema>) => {
     onError(undefined)
     try {
       await mutateAsync(values)
@@ -79,7 +79,7 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
             <FormItem>
               <FormLabel>ID*</FormLabel>
               <FormControl>
-                <Input placeholder="SongCore" {...field} autoComplete="off" />
+                <Input {...field} autoComplete="off" />
               </FormControl>
               <FormDescription>This is the BSIPA Mod ID</FormDescription>
             </FormItem>
@@ -90,10 +90,11 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name*</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="SongCore" {...field} autoComplete="off" />
+                <Input placeholder="optional" {...field} autoComplete="off" />
               </FormControl>
+              <FormDescription>Same as Mod ID if not specified</FormDescription>
             </FormItem>
           )}
         />
@@ -106,6 +107,9 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
               <FormControl>
                 <Input placeholder="optional" {...field} autoComplete="off" />
               </FormControl>
+              <FormDescription>
+                Short description that will be shown on mod installers
+              </FormDescription>
             </FormItem>
           )}
         />
@@ -163,7 +167,7 @@ export default function NewMod() {
   const [isOpen, setIsOpen] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
   const [modDetails, setModDetails] = useState<
-    z.infer<typeof newModSchema> | undefined
+    z.infer<typeof NewModSchema> | undefined
   >(undefined)
   const { mutateAsync } = api.mods.createNew.useMutation()
   const router = useRouter()
