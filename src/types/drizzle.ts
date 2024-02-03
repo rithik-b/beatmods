@@ -76,13 +76,12 @@ const users = pgSchema("auth").table("users", {
 })
 
 export const githubUsersTable = pgTable("github_users", {
-  id: uuid("id")
-    .primaryKey()
-    .notNull()
-    .references(() => users.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
+  id: uuid("id").primaryKey().notNull(),
+  authId: uuid("auth_id").references(() => users.id, {
+    // Seperate and optional for seeding mock data
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
     .defaultNow()
     .notNull(),

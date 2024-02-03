@@ -117,7 +117,7 @@ export const authenticatedProcedure = publicProcedure.use(async (opts) => {
     await drizzleClient
       .select()
       .from(githubUsersTable)
-      .where(eq(githubUsersTable.id, data.user.id))
+      .where(eq(githubUsersTable.authId, data.user.id))
       .limit(1)
   )?.[0]
 

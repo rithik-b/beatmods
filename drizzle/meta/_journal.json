@@ -15,6 +15,13 @@
       "when": 1706935775759,
       "tag": "0001_clever_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1706974476542,
+      "tag": "0002_awesome_star_brand",
+      "breakpoints": true
     }
   ]
 }
