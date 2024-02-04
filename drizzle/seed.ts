@@ -101,15 +101,15 @@ const mockModVersion: MockId[] = await drizzleClient
 
 await drizzleClient.insert(modVersionSupportedGameVersionsTable).values([
   {
-    modVersionId: mockModVersion[0]?.id ?? "",
-    gameVersionId: mockGameVersions[1]?.id ?? "",
+    modVersionId: mockModVersion[0]!.id,
+    gameVersionId: mockGameVersions[1]!.id,
   },
 ])
 
 await drizzleClient.insert(modContributorsTable).values([
   {
     modId: "Bocchi the Mod",
-    userId: mockUsers[0]?.id ?? "",
+    userId: mockUsers[0]!.id,
   },
 ])
 
