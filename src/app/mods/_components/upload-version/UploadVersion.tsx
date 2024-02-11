@@ -79,7 +79,7 @@ export default function UploadVersion({
 
   const hasErrors = useMemo(
     () => Object.keys(form.formState.errors).length > 0,
-    [form.formState.errors],
+    [form.formState],
   )
 
   return (
