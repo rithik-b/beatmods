@@ -13,13 +13,9 @@ import { cookies } from "next/headers"
 import superjson from "superjson"
 import { ZodError, z } from "zod"
 import drizzleClient from "../drizzleClient"
-import {
-  githubUsersTable,
-  modContributorsTable,
-  modsTable,
-} from "@beatmods/types/drizzle"
 import { and, eq } from "drizzle-orm"
 import { count } from "drizzle-orm"
+import dbSchema from "@beatmods/types/dbSchema"
 
 /**
  * 1. CONTEXT
@@ -116,8 +112,8 @@ export const authenticatedProcedure = publicProcedure.use(async (opts) => {
   const user = (
     await drizzleClient
       .select()
-      .from(githubUsersTable)
-      .where(eq(githubUsersTable.authId, data.user.id))
+      .from(dbSchema.githubUsers)
+      .where(eq(dbSchema.githubUsers.authId, data.user.id))
       .limit(1)
   )?.[0]
 
@@ -136,9 +132,9 @@ export const modContributorProcedure = authenticatedProcedure
   .use(async (opts) => {
     const modCount = (
       await drizzleClient
-        .select({ modCount: count(modsTable) })
-        .from(modsTable)
-        .where(eq(modsTable.id, opts.input.modId))
+        .select({ modCount: count(dbSchema.mods) })
+        .from(dbSchema.mods)
+        .where(eq(dbSchema.mods.id, opts.input.modId))
         .limit(1)
     )?.[0]?.modCount
 
@@ -147,12 +143,12 @@ export const modContributorProcedure = authenticatedProcedure
 
     const contributorsCount = (
       await drizzleClient
-        .select({ count: count(modContributorsTable) })
-        .from(modContributorsTable)
+        .select({ count: count(dbSchema.modContributors) })
+        .from(dbSchema.modContributors)
         .where(
           and(
-            eq(modContributorsTable.modId, opts.input.modId),
-            eq(modContributorsTable.userId, opts.ctx.user.id),
+            eq(dbSchema.modContributors.modId, opts.input.modId),
+            eq(dbSchema.modContributors.userId, opts.ctx.user.id),
           ),
         )
     )?.[0]?.count

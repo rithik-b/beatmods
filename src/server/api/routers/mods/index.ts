@@ -9,17 +9,10 @@ import NewModSchema from "@beatmods/types/NewModSchema"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import drizzleClient from "@beatmods/server/drizzleClient"
-import {
-  gameVersionsTable,
-  githubUsersTable,
-  modContributorsTable,
-  modVersionSupportedGameVersionsTable,
-  modVersionsTable,
-  modsTable,
-} from "@beatmods/types/drizzle"
-import { and, count, eq, max, sql } from "drizzle-orm"
+import { and, count, eq, sql } from "drizzle-orm"
 import versionsRouter, { createNewModVersion } from "./versions"
 import NewVersionSchema from "@beatmods/types/NewVersionSchema"
+import dbSchema from "@beatmods/types/dbSchema"
 
 const modsRouter = createTRPCRouter({
   validateNew: authenticatedProcedure
@@ -27,9 +20,9 @@ const modsRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const potentialDuplicateCount = (
         await drizzleClient
-          .select({ count: count(modsTable) })
-          .from(modsTable)
-          .where(eq(modsTable.id, input.id))
+          .select({ count: count(dbSchema.mods) })
+          .from(dbSchema.mods)
+          .where(eq(dbSchema.mods.id, input.id))
       )?.[0]?.count
 
       if (potentialDuplicateCount && potentialDuplicateCount > 0) {
@@ -50,7 +43,7 @@ const modsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const insertResult = await drizzleClient.transaction(async (trx) => {
         const result = await trx
-          .insert(modsTable)
+          .insert(dbSchema.mods)
           .values({
             id: input.mod.id,
             name: !!input.mod.name ? input.mod.name : input.mod.id,
@@ -59,8 +52,11 @@ const modsRouter = createTRPCRouter({
             moreInfoUrl: input.mod.moreInfoUrl,
             slug: createSlug(input.mod.id),
           })
-          .returning({ id: modsTable.id, slug: modsTable.slug })
-          .onConflictDoNothing({ target: modsTable.id })
+          .returning({
+            id: dbSchema.mods.id,
+            slug: dbSchema.mods.slug,
+          })
+          .onConflictDoNothing({ target: dbSchema.mods.id })
 
         if (!result[0]?.id) {
           throw new TRPCError({
@@ -69,7 +65,7 @@ const modsRouter = createTRPCRouter({
           })
         }
 
-        await trx.insert(modContributorsTable).values({
+        await trx.insert(dbSchema.modContributors).values({
           modId: result[0].id,
           userId: ctx.user.id,
         })
@@ -86,8 +82,8 @@ const modsRouter = createTRPCRouter({
     const mod = (
       await drizzleClient
         .select()
-        .from(modsTable)
-        .where(eq(modsTable.slug, input))
+        .from(dbSchema.mods)
+        .where(eq(dbSchema.mods.slug, input))
         .limit(1)
     )?.[0]
 
@@ -99,18 +95,18 @@ const modsRouter = createTRPCRouter({
 
     const contributors = await drizzleClient
       .select({
-        id: githubUsersTable.id,
-        name: githubUsersTable.name,
-        userName: githubUsersTable.userName,
-        avatarUrl: githubUsersTable.avatarUrl,
-        createdAt: githubUsersTable.createdAt,
+        id: dbSchema.githubUsers.id,
+        name: dbSchema.githubUsers.name,
+        userName: dbSchema.githubUsers.userName,
+        avatarUrl: dbSchema.githubUsers.avatarUrl,
+        createdAt: dbSchema.githubUsers.createdAt,
       })
-      .from(githubUsersTable)
+      .from(dbSchema.githubUsers)
       .leftJoin(
-        modContributorsTable,
-        eq(modContributorsTable.userId, githubUsersTable.id),
+        dbSchema.modContributors,
+        eq(dbSchema.modContributors.userId, dbSchema.githubUsers.id),
       )
-      .where(eq(modContributorsTable.modId, mod.id))
+      .where(eq(dbSchema.modContributors.modId, mod.id))
 
     return {
       ...mod,
@@ -127,114 +123,72 @@ const modsRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const { gameVersion, search } = input
-      const unAggregatedMods = await drizzleClient
-        .select({
-          id: modsTable.id,
-          name: modsTable.name,
-          slug: modsTable.slug,
-          category: modsTable.category,
-          contributor: githubUsersTable,
-          supportedGameVersion: gameVersionsTable.version,
-          latestVersion: max(modVersionsTable.version),
-        })
-        .from(modsTable)
-        .leftJoin(
-          modContributorsTable,
-          eq(modContributorsTable.modId, modsTable.id),
-        )
-        .leftJoin(
-          githubUsersTable,
-          eq(githubUsersTable.id, modContributorsTable.userId),
-        )
-        .leftJoin(modVersionsTable, eq(modVersionsTable.modId, modsTable.id))
-        .leftJoin(
-          modVersionSupportedGameVersionsTable,
-          eq(
-            modVersionSupportedGameVersionsTable.modVersionId,
-            modVersionsTable.id,
-          ),
-        )
-        .leftJoin(
-          gameVersionsTable,
-          eq(
-            gameVersionsTable.id,
-            modVersionSupportedGameVersionsTable.gameVersionId,
-          ),
-        )
-        .where(
-          and(
-            eq(gameVersionsTable.version, gameVersion),
-            // TODO improve search
-            !!search
-              ? sql`${search} % ANY(STRING_TO_ARRAY(${modsTable.name},' '))`
-              : sql`TRUE`,
-          ),
-        )
-        .groupBy(modsTable.id, githubUsersTable.id, gameVersionsTable.id)
 
-      const aggregatedMods = unAggregatedMods.reduce(
-        (acc, mod) => {
-          const {
-            id,
-            name,
-            slug,
-            category,
-            latestVersion,
-            contributor,
-            supportedGameVersion,
-          } = mod
-
-          const existingMod = acc.get(id)
-
-          if (!!existingMod) {
-            existingMod.contributors = !!contributor
-              ? [...existingMod.contributors, contributor]
-              : existingMod.contributors
-
-            existingMod.supportedGameVersions = !!supportedGameVersion
-              ? [...existingMod.supportedGameVersions, supportedGameVersion]
-              : existingMod.supportedGameVersions
-          } else {
-            acc.set(id, {
-              id,
-              name,
-              slug,
-              category,
-              latestVersion,
-              contributors: !!contributor ? [contributor] : [],
-              supportedGameVersions: !!supportedGameVersion
-                ? [supportedGameVersion]
-                : [],
+      const gameVersionId = !!gameVersion
+        ? (
+            await drizzleClient.query.gameVersions.findFirst({
+              columns: {
+                id: true,
+              },
+              where: (gameVersions, { eq }) =>
+                eq(gameVersions.version, gameVersion),
             })
-          }
-          return acc
-        },
-        new Map<
-          string,
-          Omit<
-            (typeof unAggregatedMods)[0],
-            "contributor" | "supportedGameVersion" | "version"
-          > & {
-            contributors: Exclude<
-              (typeof unAggregatedMods)[0]["contributor"],
-              null
-            >[]
-            supportedGameVersions: Exclude<
-              (typeof unAggregatedMods)[0]["supportedGameVersion"],
-              null
-            >[]
-          }
-        >(),
-      )
+          )?.id
+        : null
 
-      return Array.from(aggregatedMods.values())
+      const mods = await drizzleClient.query.mods.findMany({
+        columns: {
+          id: true,
+          name: true,
+          slug: true,
+          category: true,
+        },
+        with: {
+          contributors: {
+            columns: {},
+            with: {
+              user: true,
+            },
+          },
+          versions: {
+            orderBy: (versions, { desc }) => desc(versions.version),
+            limit: 1,
+            columns: { version: true },
+            with: {
+              supportedGameVersions: {
+                columns: {
+                  gameVersionId: true,
+                },
+                where: (supportedGameVersions, { eq }) =>
+                  !!gameVersionId
+                    ? eq(supportedGameVersions.gameVersionId, gameVersionId)
+                    : sql`TRUE`,
+              },
+            },
+          },
+        },
+        where: (mods) =>
+          // TODO improve search
+          !!search
+            ? sql`${search} % ANY(STRING_TO_ARRAY(${mods.name},' '))`
+            : sql`TRUE`,
+      })
+
+      return mods.map((mod) => {
+        const { versions, contributors, ...rest } = mod
+        return {
+          ...rest,
+          latestVersion: versions[0]?.version,
+          contributors: contributors.map((contributor) => contributor.user),
+        }
+      })
     }),
 
   addModContributors: modContributorProcedure
     .input(z.object({ modId: z.string(), userIds: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       await drizzleClient
-        .insert(modContributorsTable)
+        .insert(dbSchema.modContributors)
         .values(input.userIds.map((userId) => ({ modId: input.modId, userId })))
     }),
 
@@ -242,9 +196,9 @@ const modsRouter = createTRPCRouter({
     .input(z.object({ modId: z.string(), userId: z.string() }))
     .mutation(async ({ input }) => {
       const contributorCount = await drizzleClient
-        .select({ count: count(modContributorsTable) })
-        .from(modContributorsTable)
-        .where(eq(modContributorsTable.modId, input.modId))
+        .select({ count: count(dbSchema.modContributors) })
+        .from(dbSchema.modContributors)
+        .where(eq(dbSchema.modContributors.modId, input.modId))
 
       if (!contributorCount[0]?.count || contributorCount[0]?.count <= 1) {
         throw new TRPCError({
@@ -254,11 +208,11 @@ const modsRouter = createTRPCRouter({
       }
 
       await drizzleClient
-        .delete(modContributorsTable)
+        .delete(dbSchema.modContributors)
         .where(
           and(
-            eq(modContributorsTable.modId, input.modId),
-            eq(modContributorsTable.userId, input.userId),
+            eq(dbSchema.modContributors.modId, input.modId),
+            eq(dbSchema.modContributors.userId, input.userId),
           ),
         )
     }),

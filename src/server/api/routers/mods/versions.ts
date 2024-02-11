@@ -1,13 +1,6 @@
 import drizzleClient from "@beatmods/server/drizzleClient"
 import supabaseServiceRoleClient from "@beatmods/server/supabaseServiceRoleClient"
 import NewVersionSchema from "@beatmods/types/NewVersionSchema"
-import {
-  modVersionsTable,
-  modVersionSupportedGameVersionsTable,
-  gameVersionsTable,
-  modVersionDependenciesTable,
-  modsTable,
-} from "@beatmods/types/drizzle"
 import { TRPCError } from "@trpc/server"
 import { eq, inArray, count, and, desc } from "drizzle-orm"
 import { z } from "zod"
@@ -16,6 +9,7 @@ import {
   modContributorProcedure,
   publicProcedure,
 } from "../../trpc"
+import dbSchema from "@beatmods/types/dbSchema"
 
 export async function createNewModVersion(
   input: z.infer<typeof NewVersionSchema>,
@@ -29,16 +23,16 @@ export async function createNewModVersion(
 
   const modVersionId = (
     await trx
-      .insert(modVersionsTable)
+      .insert(dbSchema.modVersions)
       .values({
         modId,
         version,
         downloadUrl: downloadUrl.publicUrl,
       })
-      .returning({ id: modVersionsTable.id })
+      .returning({ id: dbSchema.modVersions.id })
   )[0]!.id
 
-  await trx.insert(modVersionSupportedGameVersionsTable).values(
+  await trx.insert(dbSchema.modVersionSupportedGameVersions).values(
     supportedGameVersionIds.map((gameVersionId) => ({
       modVersionId,
       gameVersionId,
@@ -46,7 +40,7 @@ export async function createNewModVersion(
   )
 
   if (dependencies.length !== 0) {
-    await trx.insert(modVersionDependenciesTable).values(
+    await trx.insert(dbSchema.modVersionDependencies).values(
       dependencies.map((dependency) => ({
         modVersionsId: modVersionId,
         dependencyId: dependency.id,
@@ -63,40 +57,43 @@ const versionsRouter = createTRPCRouter({
       const { modId } = input
       const modVersionsQuery = await drizzleClient
         .select({
-          id: modVersionsTable.id,
-          version: modVersionsTable.version,
-          downloadUrl: modVersionsTable.downloadUrl,
+          id: dbSchema.modVersions.id,
+          version: dbSchema.modVersions.version,
+          downloadUrl: dbSchema.modVersions.downloadUrl,
           dependency: {
-            id: modsTable.id,
-            version: modVersionDependenciesTable.semver,
+            id: dbSchema.mods.id,
+            version: dbSchema.modVersionDependencies.semver,
           },
-          supportedGameVersion: gameVersionsTable.version,
+          supportedGameVersion: dbSchema.gameVersions.version,
         })
-        .from(modVersionsTable)
+        .from(dbSchema.modVersions)
         .leftJoin(
-          modVersionSupportedGameVersionsTable,
+          dbSchema.modVersionSupportedGameVersions,
           eq(
-            modVersionSupportedGameVersionsTable.modVersionId,
-            modVersionsTable.id,
+            dbSchema.modVersionSupportedGameVersions.modVersionId,
+            dbSchema.modVersions.id,
           ),
         )
         .leftJoin(
-          gameVersionsTable,
+          dbSchema.gameVersions,
           eq(
-            gameVersionsTable.id,
-            modVersionSupportedGameVersionsTable.gameVersionId,
+            dbSchema.gameVersions.id,
+            dbSchema.modVersionSupportedGameVersions.gameVersionId,
           ),
         )
         .leftJoin(
-          modVersionDependenciesTable,
-          eq(modVersionDependenciesTable.modVersionsId, modVersionsTable.id),
+          dbSchema.modVersionDependencies,
+          eq(
+            dbSchema.modVersionDependencies.modVersionsId,
+            dbSchema.modVersions.id,
+          ),
         )
         .leftJoin(
-          modsTable,
-          eq(modsTable.id, modVersionDependenciesTable.dependencyId),
+          dbSchema.mods,
+          eq(dbSchema.mods.id, dbSchema.modVersionDependencies.dependencyId),
         )
-        .where(eq(modVersionsTable.modId, modId))
-        .orderBy(desc(modVersionsTable.version))
+        .where(eq(dbSchema.modVersions.modId, modId))
+        .orderBy(desc(dbSchema.modVersions.version))
 
       const aggregatedModVersions = modVersionsQuery.reduce(
         (acc, modVersion) => {
@@ -163,21 +160,25 @@ const versionsRouter = createTRPCRouter({
       const data = await drizzleClient
         .select({
           modVersion: {
-            modId: modVersionsTable.modId,
-            version: modVersionsTable.version,
-            gameVersionId: modVersionSupportedGameVersionsTable.gameVersionId,
+            modId: dbSchema.modVersions.modId,
+            version: dbSchema.modVersions.version,
+            gameVersionId:
+              dbSchema.modVersionSupportedGameVersions.gameVersionId,
           },
         })
-        .from(modVersionsTable)
+        .from(dbSchema.modVersions)
         .leftJoin(
-          modVersionSupportedGameVersionsTable,
+          dbSchema.modVersionSupportedGameVersions,
           eq(
-            modVersionSupportedGameVersionsTable.modVersionId,
-            modVersionsTable.id,
+            dbSchema.modVersionSupportedGameVersions.modVersionId,
+            dbSchema.modVersions.id,
           ),
         )
         .where(
-          inArray(modVersionSupportedGameVersionsTable.gameVersionId, input),
+          inArray(
+            dbSchema.modVersionSupportedGameVersions.gameVersionId,
+            input,
+          ),
         )
 
       const mods = new Map<string, string[]>()
@@ -207,12 +208,12 @@ const versionsRouter = createTRPCRouter({
 
       const modVersionCount = (
         await drizzleClient
-          .select({ modVersionCount: count(modVersionsTable) })
-          .from(modVersionsTable)
+          .select({ modVersionCount: count(dbSchema.modVersions) })
+          .from(dbSchema.modVersions)
           .where(
             and(
-              eq(modVersionsTable.modId, modId),
-              eq(modVersionsTable.version, version),
+              eq(dbSchema.modVersions.modId, modId),
+              eq(dbSchema.modVersions.version, version),
             ),
           )
           .limit(1)
@@ -226,9 +227,9 @@ const versionsRouter = createTRPCRouter({
 
       const gameVersionCount = (
         await drizzleClient
-          .select({ gameVersionCount: count(gameVersionsTable) })
-          .from(gameVersionsTable)
-          .where(eq(gameVersionsTable.id, input.supportedGameVersionIds[0]))
+          .select({ gameVersionCount: count(dbSchema.gameVersions) })
+          .from(dbSchema.gameVersions)
+          .where(eq(dbSchema.gameVersions.id, input.supportedGameVersionIds[0]))
           .limit(1)
       )?.[0]?.gameVersionCount
 

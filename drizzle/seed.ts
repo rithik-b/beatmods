@@ -1,12 +1,4 @@
-import {
-  categoriesTable,
-  gameVersionsTable,
-  githubUsersTable,
-  modContributorsTable,
-  modVersionSupportedGameVersionsTable,
-  modVersionsTable,
-  modsTable,
-} from "@beatmods/types/drizzle"
+import dbSchema from "@beatmods/types/dbSchema"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 import { env } from "process"
@@ -19,7 +11,7 @@ type MockId = {
   id: string
 }
 
-await drizzleClient.insert(categoriesTable).values([
+await drizzleClient.insert(dbSchema.categories).values([
   {
     name: "Core",
     description: "Core Mods",
@@ -31,7 +23,7 @@ await drizzleClient.insert(categoriesTable).values([
 ])
 
 const mockGameVersions: MockId[] = await drizzleClient
-  .insert(gameVersionsTable)
+  .insert(dbSchema.gameVersions)
   .values([
     {
       version: "1.29.1",
@@ -45,7 +37,7 @@ const mockGameVersions: MockId[] = await drizzleClient
   .returning()
 
 const mockUsers: MockId[] = await drizzleClient
-  .insert(githubUsersTable)
+  .insert(dbSchema.githubUsers)
   .values([
     {
       userName: "Bocchi",
@@ -76,7 +68,7 @@ const mockUsers: MockId[] = await drizzleClient
   ])
   .returning()
 
-await drizzleClient.insert(modsTable).values([
+await drizzleClient.insert(dbSchema.mods).values([
   {
     id: "Bocchi the Mod",
     name: "Bocchi the Mod",
@@ -88,7 +80,7 @@ await drizzleClient.insert(modsTable).values([
 ])
 
 const mockModVersion: MockId[] = await drizzleClient
-  .insert(modVersionsTable)
+  .insert(dbSchema.modVersions)
   .values([
     {
       modId: "Bocchi the Mod",
@@ -99,14 +91,14 @@ const mockModVersion: MockId[] = await drizzleClient
   ])
   .returning()
 
-await drizzleClient.insert(modVersionSupportedGameVersionsTable).values([
+await drizzleClient.insert(dbSchema.modVersionSupportedGameVersions).values([
   {
     modVersionId: mockModVersion[0]!.id,
     gameVersionId: mockGameVersions[1]!.id,
   },
 ])
 
-await drizzleClient.insert(modContributorsTable).values([
+await drizzleClient.insert(dbSchema.modContributors).values([
   {
     modId: "Bocchi the Mod",
     userId: mockUsers[0]!.id,

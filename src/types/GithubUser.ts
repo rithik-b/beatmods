@@ -1,7 +1,10 @@
 import { type InferSelectModel } from "drizzle-orm"
-import { type githubUsersTable } from "./drizzle"
+import type dbSchema from "./dbSchema"
 
-type GithubUser = Omit<InferSelectModel<typeof githubUsersTable>, "createdAt">
+type GithubUser = Omit<
+  InferSelectModel<typeof dbSchema.githubUsers>,
+  "createdAt" | "authId"
+>
 
 export const getNameForGithubUser = (user: GithubUser) => {
   return user.name ?? user.userName

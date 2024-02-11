@@ -1,6 +1,6 @@
 import getIsLoggedIn from "@beatmods/server/getIsLoggedIn"
-import ModsTable from "./_components/ModsTable"
 import NewMod from "./_components/NewMod"
+import ModsTable from "./_components/ModsTable"
 
 export default async function Mods() {
   const isLoggedIn = await getIsLoggedIn()
