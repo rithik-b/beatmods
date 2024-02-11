@@ -55,103 +55,45 @@ const versionsRouter = createTRPCRouter({
     .input(z.object({ modId: z.string() }))
     .query(async ({ input }) => {
       const { modId } = input
-      const modVersionsQuery = await drizzleClient
-        .select({
-          id: dbSchema.modVersions.id,
-          version: dbSchema.modVersions.version,
-          downloadUrl: dbSchema.modVersions.downloadUrl,
-          dependency: {
-            id: dbSchema.mods.id,
-            version: dbSchema.modVersionDependencies.semver,
-          },
-          supportedGameVersion: dbSchema.gameVersions.version,
-        })
-        .from(dbSchema.modVersions)
-        .leftJoin(
-          dbSchema.modVersionSupportedGameVersions,
-          eq(
-            dbSchema.modVersionSupportedGameVersions.modVersionId,
-            dbSchema.modVersions.id,
-          ),
-        )
-        .leftJoin(
-          dbSchema.gameVersions,
-          eq(
-            dbSchema.gameVersions.id,
-            dbSchema.modVersionSupportedGameVersions.gameVersionId,
-          ),
-        )
-        .leftJoin(
-          dbSchema.modVersionDependencies,
-          eq(
-            dbSchema.modVersionDependencies.modVersionsId,
-            dbSchema.modVersions.id,
-          ),
-        )
-        .leftJoin(
-          dbSchema.mods,
-          eq(dbSchema.mods.id, dbSchema.modVersionDependencies.dependencyId),
-        )
-        .where(eq(dbSchema.modVersions.modId, modId))
-        .orderBy(desc(dbSchema.modVersions.version))
-
-      const aggregatedModVersions = modVersionsQuery.reduce(
-        (acc, modVersion) => {
-          const { id, version, downloadUrl, dependency, supportedGameVersion } =
-            modVersion
-
-          const existingModVersion = acc.get(id)
-
-          if (!!existingModVersion) {
-            existingModVersion.dependencies = !!dependency?.id
-              ? existingModVersion.dependencies.set(dependency.id, dependency)
-              : existingModVersion.dependencies
-
-            existingModVersion.supportedGameVersions = !!supportedGameVersion
-              ? existingModVersion.supportedGameVersions.add(
-                  supportedGameVersion,
-                )
-              : existingModVersion.supportedGameVersions
-          } else {
-            acc.set(id, {
-              id,
-              version,
-              downloadUrl,
-              dependencies: !!dependency?.id
-                ? new Map([[dependency.id, dependency]])
-                : new Map<string, typeof dependency>(),
-              supportedGameVersions: !!supportedGameVersion
-                ? new Set([supportedGameVersion])
-                : new Set(),
-            })
-          }
-          return acc
+      const modVersions = await drizzleClient.query.modVersions.findMany({
+        columns: {
+          id: true,
+          version: true,
+          downloadUrl: true,
         },
-        new Map<
-          string,
-          Omit<
-            (typeof modVersionsQuery)[0],
-            "dependency" | "supportedGameVersion"
-          > & {
-            dependencies: Map<
-              string,
-              Exclude<(typeof modVersionsQuery)[0]["dependency"], null>
-            >
-            supportedGameVersions: Set<
-              Exclude<
-                (typeof modVersionsQuery)[0]["supportedGameVersion"],
-                null
-              >
-            >
-          }
-        >(),
-      )
+        with: {
+          dependencies: {
+            columns: { semver: true },
+            with: {
+              dependency: {
+                columns: { id: true },
+              },
+            },
+          },
+          supportedGameVersions: {
+            columns: {},
+            with: {
+              gameVersion: true,
+            },
+          },
+        },
+        where: (modVersions, { eq }) => eq(modVersions.modId, modId),
+        orderBy: (modVersions, { desc }) => desc(modVersions.version),
+      })
 
-      return Array.from(aggregatedModVersions.values()).map((modVersion) => ({
-        ...modVersion,
-        supportedGameVersions: Array.from(modVersion.supportedGameVersions),
-        dependencies: Array.from(modVersion.dependencies.values()),
-      }))
+      return modVersions.map((modVersion) => {
+        const { dependencies, supportedGameVersions, ...rest } = modVersion
+        return {
+          ...rest,
+          dependencies: dependencies.map(({ semver, dependency }) => ({
+            version: semver,
+            id: dependency.id,
+          })),
+          supportedGameVersions: supportedGameVersions.map(
+            ({ gameVersion }) => gameVersion?.version,
+          ),
+        }
+      })
     }),
   // TODO look for lowest version that supports all game versions
   getModsForGameVersions: publicProcedure

@@ -149,7 +149,7 @@ const modVersionDependenciesRelations = relations(
     dependency: one(mods, {
       fields: [modVersionDependencies.dependencyId],
       references: [mods.id],
-      relationName: "dependency",
+      relationName: "mod",
     }),
   }),
 )
@@ -209,7 +209,7 @@ const modVersionsRelations = relations(modVersions, ({ one, many }) => ({
     relationName: "mod",
   }),
   dependencies: many(modVersionDependencies, {
-    relationName: "dependency",
+    relationName: "modVersion",
   }),
   supportedGameVersions: many(modVersionSupportedGameVersions, {
     relationName: "modVersion",
@@ -244,6 +244,7 @@ const mods = pgTable(
 const modsRelations = relations(mods, ({ many }) => ({
   contributors: many(modContributors, { relationName: "mod" }),
   versions: many(modVersions, { relationName: "mod" }),
+  dependendents: many(modVersionDependencies, { relationName: "mod" }),
 }))
 
 const dbSchema = {
