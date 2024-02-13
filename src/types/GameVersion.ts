@@ -1,6 +1,6 @@
 import { type InferSelectModel } from "drizzle-orm"
-import type dbSchema from "./dbSchema"
+import { type gameVersionsTable } from "./dbSchema"
 
-type GameVersion = InferSelectModel<typeof dbSchema.gameVersions>
+type GameVersion = InferSelectModel<typeof gameVersionsTable>
 
 export default GameVersion

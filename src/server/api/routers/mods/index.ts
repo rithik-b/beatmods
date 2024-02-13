@@ -12,7 +12,11 @@ import drizzleClient from "@beatmods/server/drizzleClient"
 import { and, count, eq, sql } from "drizzle-orm"
 import versionsRouter, { createNewModVersion } from "./versions"
 import NewVersionSchema from "@beatmods/types/NewVersionSchema"
-import dbSchema from "@beatmods/types/dbSchema"
+import {
+  modsTable,
+  modContributorsTable,
+  githubUsersTable,
+} from "@beatmods/types/dbSchema"
 
 const modsRouter = createTRPCRouter({
   validateNew: authenticatedProcedure
@@ -20,9 +24,9 @@ const modsRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const potentialDuplicateCount = (
         await drizzleClient
-          .select({ count: count(dbSchema.mods) })
-          .from(dbSchema.mods)
-          .where(eq(dbSchema.mods.id, input.id))
+          .select({ count: count(modsTable) })
+          .from(modsTable)
+          .where(eq(modsTable.id, input.id))
       )?.[0]?.count
 
       if (potentialDuplicateCount && potentialDuplicateCount > 0) {
@@ -43,7 +47,7 @@ const modsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const insertResult = await drizzleClient.transaction(async (trx) => {
         const result = await trx
-          .insert(dbSchema.mods)
+          .insert(modsTable)
           .values({
             id: input.mod.id,
             name: !!input.mod.name ? input.mod.name : input.mod.id,
@@ -53,10 +57,10 @@ const modsRouter = createTRPCRouter({
             slug: createSlug(input.mod.id),
           })
           .returning({
-            id: dbSchema.mods.id,
-            slug: dbSchema.mods.slug,
+            id: modsTable.id,
+            slug: modsTable.slug,
           })
-          .onConflictDoNothing({ target: dbSchema.mods.id })
+          .onConflictDoNothing({ target: modsTable.id })
 
         if (!result[0]?.id) {
           throw new TRPCError({
@@ -65,7 +69,7 @@ const modsRouter = createTRPCRouter({
           })
         }
 
-        await trx.insert(dbSchema.modContributors).values({
+        await trx.insert(modContributorsTable).values({
           modId: result[0].id,
           userId: ctx.user.id,
         })
@@ -82,8 +86,8 @@ const modsRouter = createTRPCRouter({
     const mod = (
       await drizzleClient
         .select()
-        .from(dbSchema.mods)
-        .where(eq(dbSchema.mods.slug, input))
+        .from(modsTable)
+        .where(eq(modsTable.slug, input))
         .limit(1)
     )?.[0]
 
@@ -95,18 +99,18 @@ const modsRouter = createTRPCRouter({
 
     const contributors = await drizzleClient
       .select({
-        id: dbSchema.githubUsers.id,
-        name: dbSchema.githubUsers.name,
-        userName: dbSchema.githubUsers.userName,
-        avatarUrl: dbSchema.githubUsers.avatarUrl,
-        createdAt: dbSchema.githubUsers.createdAt,
+        id: githubUsersTable.id,
+        name: githubUsersTable.name,
+        userName: githubUsersTable.userName,
+        avatarUrl: githubUsersTable.avatarUrl,
+        createdAt: githubUsersTable.createdAt,
       })
-      .from(dbSchema.githubUsers)
+      .from(githubUsersTable)
       .leftJoin(
-        dbSchema.modContributors,
-        eq(dbSchema.modContributors.userId, dbSchema.githubUsers.id),
+        modContributorsTable,
+        eq(modContributorsTable.userId, githubUsersTable.id),
       )
-      .where(eq(dbSchema.modContributors.modId, mod.id))
+      .where(eq(modContributorsTable.modId, mod.id))
 
     return {
       ...mod,
@@ -126,7 +130,7 @@ const modsRouter = createTRPCRouter({
 
       const gameVersionId = !!gameVersion
         ? (
-            await drizzleClient.query.gameVersions.findFirst({
+            await drizzleClient.query.gameVersionsTable.findFirst({
               columns: {
                 id: true,
               },
@@ -136,7 +140,7 @@ const modsRouter = createTRPCRouter({
           )?.id
         : null
 
-      const mods = await drizzleClient.query.mods.findMany({
+      const mods = await drizzleClient.query.modsTable.findMany({
         columns: {
           id: true,
           name: true,
@@ -188,7 +192,7 @@ const modsRouter = createTRPCRouter({
     .input(z.object({ modId: z.string(), userIds: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       await drizzleClient
-        .insert(dbSchema.modContributors)
+        .insert(modContributorsTable)
         .values(input.userIds.map((userId) => ({ modId: input.modId, userId })))
     }),
 
@@ -196,9 +200,9 @@ const modsRouter = createTRPCRouter({
     .input(z.object({ modId: z.string(), userId: z.string() }))
     .mutation(async ({ input }) => {
       const contributorCount = await drizzleClient
-        .select({ count: count(dbSchema.modContributors) })
-        .from(dbSchema.modContributors)
-        .where(eq(dbSchema.modContributors.modId, input.modId))
+        .select({ count: count(modContributorsTable) })
+        .from(modContributorsTable)
+        .where(eq(modContributorsTable.modId, input.modId))
 
       if (!contributorCount[0]?.count || contributorCount[0]?.count <= 1) {
         throw new TRPCError({
@@ -208,11 +212,11 @@ const modsRouter = createTRPCRouter({
       }
 
       await drizzleClient
-        .delete(dbSchema.modContributors)
+        .delete(modContributorsTable)
         .where(
           and(
-            eq(dbSchema.modContributors.modId, input.modId),
-            eq(dbSchema.modContributors.userId, input.userId),
+            eq(modContributorsTable.modId, input.modId),
+            eq(modContributorsTable.userId, input.userId),
           ),
         )
     }),

@@ -2,14 +2,19 @@ import drizzleClient from "@beatmods/server/drizzleClient"
 import supabaseServiceRoleClient from "@beatmods/server/supabaseServiceRoleClient"
 import NewVersionSchema from "@beatmods/types/NewVersionSchema"
 import { TRPCError } from "@trpc/server"
-import { eq, inArray, count, and, desc } from "drizzle-orm"
+import { eq, inArray, count, and } from "drizzle-orm"
 import { z } from "zod"
 import {
   createTRPCRouter,
   modContributorProcedure,
   publicProcedure,
 } from "../../trpc"
-import dbSchema from "@beatmods/types/dbSchema"
+import {
+  modVersionsTable,
+  modVersionSupportedGameVersionsTable,
+  modVersionDependenciesTable,
+  gameVersionsTable,
+} from "@beatmods/types/dbSchema"
 
 export async function createNewModVersion(
   input: z.infer<typeof NewVersionSchema>,
@@ -23,16 +28,16 @@ export async function createNewModVersion(
 
   const modVersionId = (
     await trx
-      .insert(dbSchema.modVersions)
+      .insert(modVersionsTable)
       .values({
         modId,
         version,
         downloadUrl: downloadUrl.publicUrl,
       })
-      .returning({ id: dbSchema.modVersions.id })
+      .returning({ id: modVersionsTable.id })
   )[0]!.id
 
-  await trx.insert(dbSchema.modVersionSupportedGameVersions).values(
+  await trx.insert(modVersionSupportedGameVersionsTable).values(
     supportedGameVersionIds.map((gameVersionId) => ({
       modVersionId,
       gameVersionId,
@@ -40,7 +45,7 @@ export async function createNewModVersion(
   )
 
   if (dependencies.length !== 0) {
-    await trx.insert(dbSchema.modVersionDependencies).values(
+    await trx.insert(modVersionDependenciesTable).values(
       dependencies.map((dependency) => ({
         modVersionsId: modVersionId,
         dependencyId: dependency.id,
@@ -55,7 +60,7 @@ const versionsRouter = createTRPCRouter({
     .input(z.object({ modId: z.string() }))
     .query(async ({ input }) => {
       const { modId } = input
-      const modVersions = await drizzleClient.query.modVersions.findMany({
+      const modVersions = await drizzleClient.query.modVersionsTable.findMany({
         columns: {
           id: true,
           version: true,
@@ -102,25 +107,21 @@ const versionsRouter = createTRPCRouter({
       const data = await drizzleClient
         .select({
           modVersion: {
-            modId: dbSchema.modVersions.modId,
-            version: dbSchema.modVersions.version,
-            gameVersionId:
-              dbSchema.modVersionSupportedGameVersions.gameVersionId,
+            modId: modVersionsTable.modId,
+            version: modVersionsTable.version,
+            gameVersionId: modVersionSupportedGameVersionsTable.gameVersionId,
           },
         })
-        .from(dbSchema.modVersions)
+        .from(modVersionsTable)
         .leftJoin(
-          dbSchema.modVersionSupportedGameVersions,
+          modVersionSupportedGameVersionsTable,
           eq(
-            dbSchema.modVersionSupportedGameVersions.modVersionId,
-            dbSchema.modVersions.id,
+            modVersionSupportedGameVersionsTable.modVersionId,
+            modVersionsTable.id,
           ),
         )
         .where(
-          inArray(
-            dbSchema.modVersionSupportedGameVersions.gameVersionId,
-            input,
-          ),
+          inArray(modVersionSupportedGameVersionsTable.gameVersionId, input),
         )
 
       const mods = new Map<string, string[]>()
@@ -150,12 +151,12 @@ const versionsRouter = createTRPCRouter({
 
       const modVersionCount = (
         await drizzleClient
-          .select({ modVersionCount: count(dbSchema.modVersions) })
-          .from(dbSchema.modVersions)
+          .select({ modVersionCount: count(modVersionsTable) })
+          .from(modVersionsTable)
           .where(
             and(
-              eq(dbSchema.modVersions.modId, modId),
-              eq(dbSchema.modVersions.version, version),
+              eq(modVersionsTable.modId, modId),
+              eq(modVersionsTable.version, version),
             ),
           )
           .limit(1)
@@ -169,9 +170,9 @@ const versionsRouter = createTRPCRouter({
 
       const gameVersionCount = (
         await drizzleClient
-          .select({ gameVersionCount: count(dbSchema.gameVersions) })
-          .from(dbSchema.gameVersions)
-          .where(eq(dbSchema.gameVersions.id, input.supportedGameVersionIds[0]))
+          .select({ gameVersionCount: count(gameVersionsTable) })
+          .from(gameVersionsTable)
+          .where(eq(gameVersionsTable.id, input.supportedGameVersionIds[0]))
           .limit(1)
       )?.[0]?.gameVersionCount
 

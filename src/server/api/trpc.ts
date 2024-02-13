@@ -15,7 +15,11 @@ import { ZodError, z } from "zod"
 import drizzleClient from "../drizzleClient"
 import { and, eq } from "drizzle-orm"
 import { count } from "drizzle-orm"
-import dbSchema from "@beatmods/types/dbSchema"
+import {
+  githubUsersTable,
+  modsTable,
+  modContributorsTable,
+} from "@beatmods/types/dbSchema"
 
 /**
  * 1. CONTEXT
@@ -112,8 +116,8 @@ export const authenticatedProcedure = publicProcedure.use(async (opts) => {
   const user = (
     await drizzleClient
       .select()
-      .from(dbSchema.githubUsers)
-      .where(eq(dbSchema.githubUsers.authId, data.user.id))
+      .from(githubUsersTable)
+      .where(eq(githubUsersTable.authId, data.user.id))
       .limit(1)
   )?.[0]
 
@@ -132,9 +136,9 @@ export const modContributorProcedure = authenticatedProcedure
   .use(async (opts) => {
     const modCount = (
       await drizzleClient
-        .select({ modCount: count(dbSchema.mods) })
-        .from(dbSchema.mods)
-        .where(eq(dbSchema.mods.id, opts.input.modId))
+        .select({ modCount: count(modsTable) })
+        .from(modsTable)
+        .where(eq(modsTable.id, opts.input.modId))
         .limit(1)
     )?.[0]?.modCount
 
@@ -143,12 +147,12 @@ export const modContributorProcedure = authenticatedProcedure
 
     const contributorsCount = (
       await drizzleClient
-        .select({ count: count(dbSchema.modContributors) })
-        .from(dbSchema.modContributors)
+        .select({ count: count(modContributorsTable) })
+        .from(modContributorsTable)
         .where(
           and(
-            eq(dbSchema.modContributors.modId, opts.input.modId),
-            eq(dbSchema.modContributors.userId, opts.ctx.user.id),
+            eq(modContributorsTable.modId, opts.input.modId),
+            eq(modContributorsTable.userId, opts.ctx.user.id),
           ),
         )
     )?.[0]?.count

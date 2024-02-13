@@ -8,34 +8,16 @@ import {
   boolean,
   timestamp,
   pgSchema,
+  jsonb,
 } from "drizzle-orm/pg-core"
 
-const keyStatus = pgEnum("key_status", [
-  "default",
-  "valid",
-  "invalid",
-  "expired",
+const approvalStatus = pgEnum("approval_status", [
+  "pending",
+  "approved",
+  "rejected",
 ])
-const keyType = pgEnum("key_type", [
-  "aead-ietf",
-  "aead-det",
-  "hmacsha512",
-  "hmacsha256",
-  "auth",
-  "shorthash",
-  "generichash",
-  "kdf",
-  "secretbox",
-  "secretstream",
-  "stream_xchacha20",
-])
-const requestStatus = pgEnum("request_status", ["PENDING", "SUCCESS", "ERROR"])
-const factorType = pgEnum("factor_type", ["totp", "webauthn"])
-const factorStatus = pgEnum("factor_status", ["unverified", "verified"])
-const aalLevel = pgEnum("aal_level", ["aal1", "aal2", "aal3"])
-const codeChallengeMethod = pgEnum("code_challenge_method", ["s256", "plain"])
 
-const categories = pgTable(
+export const categoriesTable = pgTable(
   "categories",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -49,7 +31,7 @@ const categories = pgTable(
   },
 )
 
-const gameVersions = pgTable(
+export const gameVersionsTable = pgTable(
   "game_versions",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -65,17 +47,17 @@ const gameVersions = pgTable(
   },
 )
 
-const gameVersionsRelations = relations(gameVersions, ({ many }) => ({
-  mods: many(modVersionSupportedGameVersions, { relationName: "gameVersion" }),
+const gameVersionsRelations = relations(gameVersionsTable, ({ many }) => ({
+  mods: many(modVersionSupportedGameVersionsTable),
 }))
 
-const users = pgSchema("auth").table("users", {
+const usersTable = pgSchema("auth").table("users", {
   id: uuid("id").primaryKey().notNull(),
 })
 
-const githubUsers = pgTable("github_users", {
+export const githubUsersTable = pgTable("github_users", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
-  authId: uuid("auth_id").references(() => users.id, {
+  authId: uuid("auth_id").references(() => usersTable.id, {
     // Seperate and optional for seeding mock data
     onDelete: "cascade",
     onUpdate: "cascade",
@@ -88,109 +70,106 @@ const githubUsers = pgTable("github_users", {
   avatarUrl: text("avatar_url"),
 })
 
-const githubUsersRelations = relations(githubUsers, ({ many }) => ({
-  mods: many(modContributors, { relationName: "user" }),
+const githubUsersRelations = relations(githubUsersTable, ({ many }) => ({
+  mods: many(modContributorsTable),
 }))
 
-const modContributors = pgTable("mod_contributors", {
+export const modContributorsTable = pgTable("mod_contributors", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   modId: text("mod_id")
     .notNull()
-    .references(() => mods.id, {
+    .references(() => modsTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
   userId: uuid("user_id")
     .notNull()
-    .references(() => githubUsers.id, {
+    .references(() => githubUsersTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
 })
 
-const modContributorsRelations = relations(modContributors, ({ one }) => ({
-  user: one(githubUsers, {
-    fields: [modContributors.userId],
-    references: [githubUsers.id],
-    relationName: "user",
+const modContributorsRelations = relations(modContributorsTable, ({ one }) => ({
+  user: one(githubUsersTable, {
+    fields: [modContributorsTable.userId],
+    references: [githubUsersTable.id],
   }),
-  mod: one(mods, {
-    fields: [modContributors.modId],
-    references: [mods.id],
-    relationName: "mod",
+  mod: one(modsTable, {
+    fields: [modContributorsTable.modId],
+    references: [modsTable.id],
   }),
 }))
 
-const modVersionDependencies = pgTable("mod_version_dependencies", {
+export const modVersionDependenciesTable = pgTable("mod_version_dependencies", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   modVersionsId: uuid("mod_versions_id")
     .notNull()
-    .references(() => modVersions.id, {
+    .references(() => modVersionsTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
   semver: text("semver").notNull(),
   dependencyId: text("dependency_id")
     .notNull()
-    .references(() => mods.id, {
+    .references(() => modsTable.id, {
       onDelete: "restrict",
       onUpdate: "cascade",
     }),
 })
 
 const modVersionDependenciesRelations = relations(
-  modVersionDependencies,
+  modVersionDependenciesTable,
   ({ one }) => ({
-    modVersion: one(modVersions, {
-      fields: [modVersionDependencies.modVersionsId],
-      references: [modVersions.id],
-      relationName: "modVersion",
+    modVersion: one(modVersionsTable, {
+      fields: [modVersionDependenciesTable.modVersionsId],
+      references: [modVersionsTable.id],
     }),
-    dependency: one(mods, {
-      fields: [modVersionDependencies.dependencyId],
-      references: [mods.id],
-      relationName: "mod",
+    dependency: one(modsTable, {
+      fields: [modVersionDependenciesTable.dependencyId],
+      references: [modsTable.id],
     }),
   }),
 )
 
-const modVersionSupportedGameVersions = pgTable(
+export const modVersionSupportedGameVersionsTable = pgTable(
   "mod_version_supported_game_versions",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     modVersionId: uuid("mod_version_id")
       .notNull()
-      .references(() => modVersions.id, {
+      .references(() => modVersionsTable.id, {
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    gameVersionId: uuid("game_version_id").references(() => gameVersions.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
+    gameVersionId: uuid("game_version_id").references(
+      () => gameVersionsTable.id,
+      {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      },
+    ),
   },
 )
 
 const modVersionSupportedGameVersionsRelations = relations(
-  modVersionSupportedGameVersions,
+  modVersionSupportedGameVersionsTable,
   ({ one }) => ({
-    modVersion: one(modVersions, {
-      fields: [modVersionSupportedGameVersions.modVersionId],
-      references: [modVersions.id],
-      relationName: "modVersion",
+    modVersion: one(modVersionsTable, {
+      fields: [modVersionSupportedGameVersionsTable.modVersionId],
+      references: [modVersionsTable.id],
     }),
-    gameVersion: one(gameVersions, {
-      fields: [modVersionSupportedGameVersions.gameVersionId],
-      references: [gameVersions.id],
-      relationName: "gameVersion",
+    gameVersion: one(gameVersionsTable, {
+      fields: [modVersionSupportedGameVersionsTable.gameVersionId],
+      references: [gameVersionsTable.id],
     }),
   }),
 )
 
-const modVersions = pgTable("mod_versions", {
+export const modVersionsTable = pgTable("mod_versions", {
   modId: text("mod_id")
     .notNull()
-    .references(() => mods.id, {
+    .references(() => modsTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
@@ -202,21 +181,16 @@ const modVersions = pgTable("mod_versions", {
   downloadUrl: text("download_url").notNull(),
 })
 
-const modVersionsRelations = relations(modVersions, ({ one, many }) => ({
-  mod: one(mods, {
-    fields: [modVersions.modId],
-    references: [mods.id],
-    relationName: "mod",
+const modVersionsRelations = relations(modVersionsTable, ({ one, many }) => ({
+  mod: one(modsTable, {
+    fields: [modVersionsTable.modId],
+    references: [modsTable.id],
   }),
-  dependencies: many(modVersionDependencies, {
-    relationName: "modVersion",
-  }),
-  supportedGameVersions: many(modVersionSupportedGameVersions, {
-    relationName: "modVersion",
-  }),
+  dependencies: many(modVersionDependenciesTable),
+  supportedGameVersions: many(modVersionSupportedGameVersionsTable),
 }))
 
-const mods = pgTable(
+export const modsTable = pgTable(
   "mods",
   {
     id: text("id").primaryKey().notNull(),
@@ -229,7 +203,7 @@ const mods = pgTable(
       .notNull(),
     category: text("category")
       .notNull()
-      .references(() => categories.name, {
+      .references(() => categoriesTable.name, {
         onDelete: "restrict",
         onUpdate: "cascade",
       }),
@@ -241,35 +215,85 @@ const mods = pgTable(
   },
 )
 
-const modsRelations = relations(mods, ({ many }) => ({
-  contributors: many(modContributors, { relationName: "mod" }),
-  versions: many(modVersions, { relationName: "mod" }),
-  dependendents: many(modVersionDependencies, { relationName: "mod" }),
+const modsRelations = relations(modsTable, ({ many }) => ({
+  contributors: many(modContributorsTable),
+  versions: many(modVersionsTable),
+  dependendents: many(modVersionDependenciesTable),
 }))
 
-const dbSchema = {
-  keyStatus,
-  keyType,
-  requestStatus,
-  factorType,
-  factorStatus,
-  aalLevel,
-  codeChallengeMethod,
-  categories,
-  gameVersions,
+export const pendingModsTable = pgTable("pending_mods", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  modId: text("mod_id")
+    .notNull()
+    .references(() => modsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  name: text("name").notNull(),
+  description: text("description"),
+  moreInfoUrl: text("more_info_url").notNull(),
+  category: text("category")
+    .notNull()
+    .references(() => categoriesTable.name, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+  status: approvalStatus("status").default("pending").notNull(),
+})
+
+const pendingModsRelations = relations(pendingModsTable, ({ one, many }) => ({
+  mod: one(modsTable, {
+    fields: [pendingModsTable.modId],
+    references: [modsTable.id],
+  }),
+  category: one(categoriesTable, {
+    fields: [pendingModsTable.category],
+    references: [categoriesTable.name],
+  }),
+  auditLogs: many(pendingModsAuditLogTable),
+}))
+
+export const pendingModsAuditLogTable = pgTable("pending_mods_audit_log", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  pendingModId: uuid("pending_mod_id")
+    .notNull()
+    .references(() => pendingModsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => githubUsersTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  changedFields: jsonb("changed_fields").notNull(),
+})
+
+const pendingModsAuditLogRelations = relations(
+  pendingModsAuditLogTable,
+  ({ one }) => ({
+    pendingMod: one(pendingModsTable, {
+      fields: [pendingModsAuditLogTable.pendingModId],
+      references: [pendingModsTable.id],
+    }),
+    user: one(githubUsersTable, {
+      fields: [pendingModsAuditLogTable.userId],
+      references: [githubUsersTable.id],
+    }),
+  }),
+)
+
+export const dbSchemaRelations = {
   gameVersionsRelations,
-  mods,
-  modVersions,
-  modContributors,
-  modVersionDependencies,
-  modVersionSupportedGameVersions,
-  githubUsers,
   githubUsersRelations,
   modContributorsRelations,
   modVersionsRelations,
   modsRelations,
   modVersionDependenciesRelations,
   modVersionSupportedGameVersionsRelations,
+  pendingModsRelations,
+  pendingModsAuditLogRelations,
 }
-
-export default dbSchema

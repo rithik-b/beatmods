@@ -1,8 +1,8 @@
 import { type InferSelectModel } from "drizzle-orm"
-import type dbSchema from "./dbSchema"
+import { type githubUsersTable } from "./dbSchema"
 
 type GithubUser = Omit<
-  InferSelectModel<typeof dbSchema.githubUsers>,
+  InferSelectModel<typeof githubUsersTable>,
   "createdAt" | "authId"
 >
 
