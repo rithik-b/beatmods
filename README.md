@@ -10,6 +10,7 @@ Follow these steps to set up and run the project on your local machine.
 - [Node LTS](https://nodejs.org/en)
 - [Docker](https://www.docker.com) for the database
 - [Bun](https://bun.sh/) (or npm/pnpm/yarn) for package management
+- [Supabase CLI](https://supabase.io/docs/guides/local-development) for running the database
 
 ## 1. Clone the Project
 
@@ -85,4 +86,12 @@ If you would like seed data (i.e. example mods and users in the database) you ca
 
 ```bash
 bun run seed
+```
+
+## 8. Start Next.js
+
+Finally, start the Next.js development server using the following command:
+
+```bash
+bun dev
 ```
