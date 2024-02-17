@@ -4,7 +4,7 @@ import {
   modContributorProcedure,
   publicProcedure,
 } from "@beatmods/server/api/trpc"
-import { createSlug } from "@beatmods/utils"
+import { createSlug, diffObjects } from "@beatmods/utils"
 import NewModSchema from "@beatmods/types/NewModSchema"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
@@ -16,7 +16,10 @@ import {
   modsTable,
   modContributorsTable,
   githubUsersTable,
+  pendingModsTable,
+  pendingModsAuditLogTable,
 } from "@beatmods/types/dbSchema"
+import EditModDetailsSchema from "@beatmods/types/EditModDetailsSchema"
 
 const modsRouter = createTRPCRouter({
   validateNew: authenticatedProcedure
@@ -219,6 +222,109 @@ const modsRouter = createTRPCRouter({
             eq(modContributorsTable.userId, input.userId),
           ),
         )
+    }),
+
+  editModDetails: modContributorProcedure
+    .input(EditModDetailsSchema)
+    .mutation(async ({ ctx, input }) => {
+      await drizzleClient.transaction(async (trx) => {
+        const { modId, ...newFields } = input
+
+        const pendingMod = await trx.query.pendingModsTable.findFirst({
+          columns: {
+            id: true,
+            description: true,
+            moreInfoUrl: true,
+            category: true,
+          },
+          where: (pendingMods, { eq, and }) =>
+            and(
+              eq(pendingMods.modId, modId),
+              eq(pendingMods.status, "pending"),
+            ),
+        })
+
+        let pendingModId: string | undefined
+        let diff: Record<string, unknown> = {}
+
+        if (!pendingMod) {
+          const orignalMod = await trx.query.modsTable.findFirst({
+            columns: {
+              id: true,
+              description: true,
+              moreInfoUrl: true,
+              category: true,
+            },
+            where: (mods, { eq }) => eq(mods.id, input.modId),
+          })
+
+          if (!orignalMod) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Mod not found",
+            })
+          }
+
+          pendingModId = (
+            await trx
+              .insert(pendingModsTable)
+              .values({
+                modId: input.modId,
+                status: "pending",
+                ...newFields,
+              })
+              .returning({ id: pendingModsTable.id })
+          )?.[0]?.id
+
+          const { id, ...orignalFields } = orignalMod
+          diff = diffObjects(orignalFields, newFields)
+        } else {
+          pendingModId = pendingMod.id
+
+          await trx
+            .update(pendingModsTable)
+            .set({
+              ...newFields,
+              updatedAt: sql`CURRENT_TIMESTAMP`,
+            })
+            .where(eq(pendingModsTable.id, pendingModId))
+
+          const { id, ...pendingModFields } = pendingMod
+          diff = diffObjects(pendingModFields, newFields)
+        }
+
+        await trx.insert(pendingModsAuditLogTable).values({
+          pendingModId: pendingModId!,
+          userId: ctx.user.id,
+          diff: diff,
+        })
+      })
+    }),
+
+  getPendingModDetails: modContributorProcedure
+    .input(z.object({ modId: z.string() }))
+    .query(async ({ input }) => {
+      const pendingMod = await drizzleClient.query.pendingModsTable.findFirst({
+        columns: {
+          description: true,
+          moreInfoUrl: true,
+          category: true,
+        },
+        where: (pendingMods, { eq, and }) =>
+          and(
+            eq(pendingMods.modId, input.modId),
+            eq(pendingMods.status, "pending"),
+          ),
+      })
+
+      if (!pendingMod) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Pending mod not found",
+        })
+      }
+
+      return pendingMod
     }),
 
   versions: versionsRouter,

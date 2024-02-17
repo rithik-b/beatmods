@@ -3,6 +3,8 @@ import { api } from "@beatmods/trpc/server"
 import { getTRPCErrorFromUnknown } from "@trpc/server"
 import Versions from "./_components/Versions"
 import ContributorsEditor from "./_components/contributors-editor/ContributorsEditor"
+import ModDetailsEditor from "./_components/details-editor/ModDetailsEditor"
+import { ModDetailsProvider } from "./_hooks/useModDetails"
 
 export default async function ModDetails({
   params,
@@ -20,34 +22,39 @@ export default async function ModDetails({
     } catch (e) {}
 
     return (
-      <div className="flex h-full flex-col gap-5">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-row items-center gap-2">
-            <h1 className="text-6xl">{mod.name}</h1>
-            <div className="flex h-fit min-w-16 justify-center rounded-full bg-primary p-2 text-sm text-primary-foreground">
-              {mod.category}
+      <ModDetailsProvider mod={mod}>
+        <div className="flex h-full flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-row items-center justify-between">
+              <div className="flex flex-row items-center gap-2">
+                <h1 className="text-6xl">{mod.name}</h1>
+                <div className="flex h-fit min-w-16 justify-center rounded-full bg-primary p-2 text-sm text-primary-foreground">
+                  {mod.category}
+                </div>
+              </div>
+              {isContributor && <ModDetailsEditor />}
             </div>
-          </div>
-          <div className="flex h-8 flex-row items-center gap-2">
-            <Contributors contributors={mod.contributors} />
-            {isContributor && (
-              <ContributorsEditor
-                modId={mod.id}
-                modName={mod.name}
-                contributors={mod.contributors}
-              />
+            <div className="flex h-8 flex-row items-center gap-2">
+              <Contributors contributors={mod.contributors} />
+              {isContributor && (
+                <ContributorsEditor
+                  modId={mod.id}
+                  modName={mod.name}
+                  contributors={mod.contributors}
+                />
+              )}
+            </div>
+            {mod.description ? (
+              <p className="text-lg">{mod.description}</p>
+            ) : (
+              <p className="text-lg font-light italic">
+                No description provided.
+              </p>
             )}
           </div>
-          {mod.description ? (
-            <p className="text-lg">{mod.description}</p>
-          ) : (
-            <p className="text-lg font-light italic">
-              No description provided.
-            </p>
-          )}
+          <Versions modId={mod.id} isContributor={isContributor} />
         </div>
-        <Versions modId={mod.id} isContributor={isContributor} />
-      </div>
+      </ModDetailsProvider>
     )
   } catch (e) {
     return (

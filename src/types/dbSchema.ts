@@ -11,7 +11,7 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core"
 
-const approvalStatus = pgEnum("approval_status", [
+export const approvalStatusPgEnum = pgEnum("approval_status", [
   "pending",
   "approved",
   "rejected",
@@ -229,28 +229,25 @@ export const pendingModsTable = pgTable("pending_mods", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  name: text("name").notNull(),
   description: text("description"),
-  moreInfoUrl: text("more_info_url").notNull(),
-  category: text("category")
-    .notNull()
-    .references(() => categoriesTable.name, {
-      onDelete: "restrict",
-      onUpdate: "cascade",
-    }),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }),
-  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-  status: approvalStatus("status").default("pending").notNull(),
+  moreInfoUrl: text("more_info_url"),
+  category: text("category").references(() => categoriesTable.name, {
+    onDelete: "restrict",
+    onUpdate: "cascade",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+    .defaultNow()
+    .notNull(),
+  status: approvalStatusPgEnum("status").default("pending").notNull(),
 })
 
 const pendingModsRelations = relations(pendingModsTable, ({ one, many }) => ({
   mod: one(modsTable, {
     fields: [pendingModsTable.modId],
     references: [modsTable.id],
-  }),
-  category: one(categoriesTable, {
-    fields: [pendingModsTable.category],
-    references: [categoriesTable.name],
   }),
   auditLogs: many(pendingModsAuditLogTable),
 }))
@@ -269,7 +266,10 @@ export const pendingModsAuditLogTable = pgTable("pending_mods_audit_log", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  changedFields: jsonb("changed_fields").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .defaultNow()
+    .notNull(),
+  diff: jsonb("diff").notNull(),
 })
 
 const pendingModsAuditLogRelations = relations(

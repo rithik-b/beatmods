@@ -7,6 +7,7 @@ import { useState } from "react"
 
 import { type AppRouter } from "@beatmods/server/api/root"
 import { getUrl, transformer } from "./shared"
+import { getTRPCErrorFromUnknown } from "@trpc/server"
 
 export const api = createTRPCReact<AppRouter>()
 
@@ -54,4 +55,8 @@ export function TRPCReactProvider(props: {
       </api.Provider>
     </QueryClientProvider>
   )
+}
+
+export function dontRetryOn404(e: unknown) {
+  return getTRPCErrorFromUnknown(e).code === "NOT_FOUND"
 }
