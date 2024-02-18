@@ -4,17 +4,15 @@ import { getNameForGithubUser } from "@beatmods/types/GithubUser"
 import { api } from "@beatmods/trpc/react"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTrigger,
 } from "@beatmods/components/ui/alert-dialog"
 import { Button } from "@beatmods/components/ui/button"
 import { Trash2 } from "lucide-react"
-import { useMemo } from "react"
+import { useMemo, useRef, useState } from "react"
 
 interface RemoveContributorsProps {
   modId: string
@@ -32,6 +30,27 @@ export default function RemoveContributors({
     () => contributors.length === 1,
     [contributors],
   )
+  function CloseCleanup() {
+    clearTimeout(timerRef.current)
+    setSelectedUser(null)
+    setIsDisabled(false)
+    setIsLoading(false)
+    setIsOpen(false)
+  }
+
+  const [selectedUser, setSelectedUser] = useState<GithubUser | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isDisabled, setIsDisabled] = useState(false)
+  const currentUser = api.user.user.useQuery()
+  const timerRef = useRef<NodeJS.Timeout>()
+
+  const startTimer = () => {
+    setIsDisabled(true)
+    timerRef.current = setTimeout(() => {
+      setIsDisabled(false)
+    }, 3000)
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -42,48 +61,74 @@ export default function RemoveContributors({
               <GithubAvatar githubUser={c} />
               <span className="text-md">{getNameForGithubUser(c)}</span>
             </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild disabled={isSingleContributor}>
-                {!isSingleContributor && (
-                  <Button
-                    variant="destructive"
-                    title="Remove contributor"
-                    className="flex flex-row items-center gap-2"
-                    size="icon"
-                  >
-                    <Trash2 />
-                  </Button>
-                )}
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>Remove Contributor?</AlertDialogHeader>
-                <AlertDialogDescription>
-                  {`Are you sure you want to remove ${getNameForGithubUser(
-                    c,
-                  )} from the contributors?`}
-                  <br />
-                  {"They can be added back afterwards"}
-                </AlertDialogDescription>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    asChild
-                    onClick={async () => {
-                      try {
-                        await mutateAsync({ modId, userId: c.id })
-                        onRemovalSuccess()
-                      } catch (e) {
-                        console.log(e)
-                      }
-                    }}
-                  >
-                    <Button variant="destructive">Remove</Button>
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {!isSingleContributor && (
+              <Button
+                variant="destructive"
+                title="Remove contributor"
+                size="icon"
+                onClick={() => {
+                  setSelectedUser(c)
+                  if (c.id === currentUser.data!.id) {
+                    startTimer()
+                  }
+
+                  setIsOpen(true)
+                }}
+              >
+                <Trash2 />
+              </Button>
+            )}
           </div>
         ))}
+        {selectedUser === null ? (
+          ""
+        ) : (
+          <AlertDialog
+            open={isOpen}
+            onOpenChange={() => {
+              // Only called if the dialog is closed via the cancel button
+              CloseCleanup()
+            }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>Remove Contributor?</AlertDialogHeader>
+              <AlertDialogDescription>
+                {`Are you sure you want to remove ${getNameForGithubUser(
+                  selectedUser,
+                )} from the contributors?`}
+                <br />
+                {currentUser.data?.id === selectedUser.id ? (
+                  <span className="text-destructive">
+                    You will lose access to this mod and won&apos;t be able to
+                    add yourself back!
+                  </span>
+                ) : (
+                  "They can be added back afterwards"
+                )}
+              </AlertDialogDescription>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  variant="destructive"
+                  isLoading={isLoading}
+                  disabled={isDisabled}
+                  onClick={async () => {
+                    try {
+                      setIsLoading(true)
+                      await mutateAsync({ modId, userId: selectedUser.id })
+                      CloseCleanup()
+                      onRemovalSuccess()
+                    } catch (e) {
+                      console.log(e)
+                    }
+                  }}
+                >
+                  Remove
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     </div>
   )

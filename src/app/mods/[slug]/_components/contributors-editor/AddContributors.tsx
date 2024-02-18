@@ -31,11 +31,13 @@ export default function AddContributors({
   const { mutateAsync } = api.mods.addModContributors.useMutation()
   const { data } = api.allUsers.useQuery()
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [inputValue, setInputValue] = useState("")
 
   const addUsers = async () => {
     try {
+      setIsLoading(true)
       await mutateAsync({ modId, userIds: selectedUsers })
       setIsOpen(false)
       onAddSuccess()
@@ -55,6 +57,7 @@ export default function AddContributors({
       onOpenChange={(open) => {
         setInputValue("")
         setSelectedUsers([])
+        setIsLoading(false)
         setIsOpen(open)
       }}
     >
@@ -75,7 +78,7 @@ export default function AddContributors({
             inputValue={inputValue}
             setInputValue={setInputValue}
             getLabel={(userId) => {
-              return data.find((u) => u.id === userId)!.userName
+              return getNameForGithubUser(data.find((u) => u.id === userId)!)
             }}
             onChange={(value) => {
               setSelectedUsers(value)
@@ -107,7 +110,11 @@ export default function AddContributors({
                 </CommandItem>
               ))}
           </TagInput>
-          <Button disabled={selectedUsers.length === 0} onClick={addUsers}>
+          <Button
+            disabled={selectedUsers.length === 0}
+            isLoading={isLoading}
+            onClick={addUsers}
+          >
             Add
           </Button>
         </div>
