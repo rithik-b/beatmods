@@ -29,6 +29,13 @@
       "when": 1706975123578,
       "tag": "0003_lethal_phalanx",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1708897442677,
+      "tag": "0004_yellow_jackpot",
+      "breakpoints": true
     }
   ]
 }

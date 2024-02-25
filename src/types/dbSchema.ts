@@ -230,11 +230,13 @@ export const pendingModsTable = pgTable("pending_mods", {
       onUpdate: "cascade",
     }),
   description: text("description"),
-  moreInfoUrl: text("more_info_url"),
-  category: text("category").references(() => categoriesTable.name, {
-    onDelete: "restrict",
-    onUpdate: "cascade",
-  }),
+  moreInfoUrl: text("more_info_url").notNull(),
+  category: text("category")
+    .notNull()
+    .references(() => categoriesTable.name, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
     .defaultNow()
     .notNull(),
