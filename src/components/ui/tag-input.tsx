@@ -49,14 +49,8 @@ const TagInput = <T,>({
             key={getLabel?.(v) ?? v}
             className="flex flex-row items-center gap-0.5 rounded-full bg-primary px-2 py-1 text-sm text-primary-foreground"
           >
-            <div
-              className="cursor-pointer"
-              onClick={() => onChange(value.filter((x) => x !== v))}
-            >
-              <X
-                strokeWidth={3}
-                className="h-3 w-3 transition-all hover:text-gray-300"
-              />
+            <div className="cursor-pointer" onClick={() => onChange(value.filter((x) => x !== v))}>
+              <X strokeWidth={3} className="h-3 w-3 transition-all hover:text-gray-300" />
               <span className="sr-only">Remove</span>
             </div>
             <span>{getLabel?.(v) ?? v}</span>
@@ -66,42 +60,26 @@ const TagInput = <T,>({
           placeholder={!value || value.length === 0 ? placeholder : undefined}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
-            if (
-              inputRef.current &&
-              inputRef.current.contains(document.activeElement)
-            )
-              return
+            if (inputRef.current && inputRef.current.contains(document.activeElement)) return
             setIsFocused(false)
           }}
           value={inputValue}
           onValueChange={setInputValue}
           className="flex h-11 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
           onKeyDown={(e) => {
-            if (
-              e.key === "Backspace" &&
-              (e.target as HTMLInputElement).value === ""
-            )
+            if (e.key === "Backspace" && (e.target as HTMLInputElement).value === "")
               onChange(value.slice(0, value.length - 1))
           }}
         />
       </div>
-      <TagInputSuggestions
-        className={
-          isFocused && (value.length === 0 || inputValue !== "")
-            ? "running"
-            : "hidden"
-        }
-      >
+      <TagInputSuggestions className={isFocused && (value.length === 0 || inputValue !== "") ? "running" : "hidden"}>
         {children}
       </TagInputSuggestions>
     </Command>
   )
 }
 
-const TagInputSuggestions = ({
-  children,
-  className,
-}: PropsWithChildren<{ className?: string }>) => {
+const TagInputSuggestions = ({ children, className }: PropsWithChildren<{ className?: string }>) => {
   const resultsCount = useCommandState((state) => state.filtered.count)
 
   return (

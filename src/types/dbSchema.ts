@@ -1,21 +1,7 @@
 import { relations } from "drizzle-orm"
-import {
-  pgTable,
-  unique,
-  pgEnum,
-  uuid,
-  text,
-  boolean,
-  timestamp,
-  pgSchema,
-  jsonb,
-} from "drizzle-orm/pg-core"
+import { pgTable, unique, pgEnum, uuid, text, boolean, timestamp, pgSchema, jsonb } from "drizzle-orm/pg-core"
 
-export const approvalStatusPgEnum = pgEnum("approval_status", [
-  "pending",
-  "approved",
-  "rejected",
-])
+export const approvalStatusPgEnum = pgEnum("approval_status", ["pending", "approved", "rejected"])
 
 export const categoriesTable = pgTable(
   "categories",
@@ -40,9 +26,7 @@ export const gameVersionsTable = pgTable(
   },
   (table) => {
     return {
-      gameVersionsVersionKey: unique("GameVersions_version_key").on(
-        table.version,
-      ),
+      gameVersionsVersionKey: unique("GameVersions_version_key").on(table.version),
     }
   },
 )
@@ -62,9 +46,7 @@ export const githubUsersTable = pgTable("github_users", {
     onDelete: "cascade",
     onUpdate: "cascade",
   }),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   name: text("name"),
   userName: text("user_name").notNull(),
   avatarUrl: text("avatar_url"),
@@ -118,53 +100,41 @@ export const modVersionDependenciesTable = pgTable("mod_version_dependencies", {
     }),
 })
 
-const modVersionDependenciesRelations = relations(
-  modVersionDependenciesTable,
-  ({ one }) => ({
-    modVersion: one(modVersionsTable, {
-      fields: [modVersionDependenciesTable.modVersionsId],
-      references: [modVersionsTable.id],
-    }),
-    dependency: one(modsTable, {
-      fields: [modVersionDependenciesTable.dependencyId],
-      references: [modsTable.id],
-    }),
+const modVersionDependenciesRelations = relations(modVersionDependenciesTable, ({ one }) => ({
+  modVersion: one(modVersionsTable, {
+    fields: [modVersionDependenciesTable.modVersionsId],
+    references: [modVersionsTable.id],
   }),
-)
-
-export const modVersionSupportedGameVersionsTable = pgTable(
-  "mod_version_supported_game_versions",
-  {
-    id: uuid("id").defaultRandom().primaryKey().notNull(),
-    modVersionId: uuid("mod_version_id")
-      .notNull()
-      .references(() => modVersionsTable.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
-    gameVersionId: uuid("game_version_id").references(
-      () => gameVersionsTable.id,
-      {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      },
-    ),
-  },
-)
-
-const modVersionSupportedGameVersionsRelations = relations(
-  modVersionSupportedGameVersionsTable,
-  ({ one }) => ({
-    modVersion: one(modVersionsTable, {
-      fields: [modVersionSupportedGameVersionsTable.modVersionId],
-      references: [modVersionsTable.id],
-    }),
-    gameVersion: one(gameVersionsTable, {
-      fields: [modVersionSupportedGameVersionsTable.gameVersionId],
-      references: [gameVersionsTable.id],
-    }),
+  dependency: one(modsTable, {
+    fields: [modVersionDependenciesTable.dependencyId],
+    references: [modsTable.id],
   }),
-)
+}))
+
+export const modVersionSupportedGameVersionsTable = pgTable("mod_version_supported_game_versions", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  modVersionId: uuid("mod_version_id")
+    .notNull()
+    .references(() => modVersionsTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  gameVersionId: uuid("game_version_id").references(() => gameVersionsTable.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+})
+
+const modVersionSupportedGameVersionsRelations = relations(modVersionSupportedGameVersionsTable, ({ one }) => ({
+  modVersion: one(modVersionsTable, {
+    fields: [modVersionSupportedGameVersionsTable.modVersionId],
+    references: [modVersionsTable.id],
+  }),
+  gameVersion: one(gameVersionsTable, {
+    fields: [modVersionSupportedGameVersionsTable.gameVersionId],
+    references: [gameVersionsTable.id],
+  }),
+}))
 
 export const modVersionsTable = pgTable("mod_versions", {
   modId: text("mod_id")
@@ -173,9 +143,7 @@ export const modVersionsTable = pgTable("mod_versions", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   version: text("version").notNull(),
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   downloadUrl: text("download_url").notNull(),
@@ -198,9 +166,7 @@ export const modsTable = pgTable(
     slug: text("slug").notNull(),
     description: text("description"),
     moreInfoUrl: text("more_info_url").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .defaultNow()
-      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
     category: text("category")
       .notNull()
       .references(() => categoriesTable.name, {
@@ -237,12 +203,8 @@ export const pendingModsTable = pgTable("pending_mods", {
       onDelete: "restrict",
       onUpdate: "cascade",
     }),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   status: approvalStatusPgEnum("status").default("pending").notNull(),
 })
 
@@ -268,25 +230,20 @@ export const pendingModsAuditLogTable = pgTable("pending_mods_audit_log", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   diff: jsonb("diff").notNull(),
 })
 
-const pendingModsAuditLogRelations = relations(
-  pendingModsAuditLogTable,
-  ({ one }) => ({
-    pendingMod: one(pendingModsTable, {
-      fields: [pendingModsAuditLogTable.pendingModId],
-      references: [pendingModsTable.id],
-    }),
-    user: one(githubUsersTable, {
-      fields: [pendingModsAuditLogTable.userId],
-      references: [githubUsersTable.id],
-    }),
+const pendingModsAuditLogRelations = relations(pendingModsAuditLogTable, ({ one }) => ({
+  pendingMod: one(pendingModsTable, {
+    fields: [pendingModsAuditLogTable.pendingModId],
+    references: [pendingModsTable.id],
   }),
-)
+  user: one(githubUsersTable, {
+    fields: [pendingModsAuditLogTable.userId],
+    references: [githubUsersTable.id],
+  }),
+}))
 
 export const dbSchemaRelations = {
   gameVersionsRelations,

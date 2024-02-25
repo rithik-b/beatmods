@@ -33,9 +33,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "Categories_name_key": {
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "nullsNotDistinct": false,
           "name": "Categories_name_key"
         }
@@ -71,9 +69,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "GameVersions_version_key": {
-          "columns": [
-            "version"
-          ],
+          "columns": ["version"],
           "nullsNotDistinct": false,
           "name": "GameVersions_version_key"
         }
@@ -122,12 +118,8 @@
           "tableFrom": "github_users",
           "tableTo": "users",
           "schemaTo": "auth",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -166,12 +158,8 @@
           "tableFrom": "mod_contributors",
           "tableTo": "mods",
           "schemaTo": "public",
-          "columnsFrom": [
-            "mod_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mod_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -180,12 +168,8 @@
           "tableFrom": "mod_contributors",
           "tableTo": "github_users",
           "schemaTo": "public",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -230,12 +214,8 @@
           "tableFrom": "mod_version_dependencies",
           "tableTo": "mods",
           "schemaTo": "public",
-          "columnsFrom": [
-            "dependency_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dependency_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -244,12 +224,8 @@
           "tableFrom": "mod_version_dependencies",
           "tableTo": "mod_versions",
           "schemaTo": "public",
-          "columnsFrom": [
-            "mod_versions_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mod_versions_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -288,12 +264,8 @@
           "tableFrom": "mod_version_supported_game_versions",
           "tableTo": "game_versions",
           "schemaTo": "public",
-          "columnsFrom": [
-            "game_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["game_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -302,12 +274,8 @@
           "tableFrom": "mod_version_supported_game_versions",
           "tableTo": "mod_versions",
           "schemaTo": "public",
-          "columnsFrom": [
-            "mod_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mod_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -359,12 +327,8 @@
           "tableFrom": "mod_versions",
           "tableTo": "mods",
           "schemaTo": "public",
-          "columnsFrom": [
-            "mod_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mod_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -427,12 +391,8 @@
           "tableFrom": "mods",
           "tableTo": "categories",
           "schemaTo": "public",
-          "columnsFrom": [
-            "category"
-          ],
-          "columnsTo": [
-            "name"
-          ],
+          "columnsFrom": ["category"],
+          "columnsTo": ["name"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -440,9 +400,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "Mod_slug_key": {
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "nullsNotDistinct": false,
           "name": "Mod_slug_key"
         }

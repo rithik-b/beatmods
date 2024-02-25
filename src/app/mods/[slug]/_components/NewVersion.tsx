@@ -24,13 +24,10 @@ interface Props {
 export default function NewVersion({ modId }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
-  const { mutateAsync: createNewModVersionAsync } =
-    api.mods.versions.createNew.useMutation()
+  const { mutateAsync: createNewModVersionAsync } = api.mods.versions.createNew.useMutation()
   const utils = api.useUtils()
 
-  const onUploadSuccess = async (
-    modVersion: z.infer<typeof NewVersionSchema>,
-  ) => {
+  const onUploadSuccess = async (modVersion: z.infer<typeof NewVersionSchema>) => {
     try {
       await createNewModVersionAsync(modVersion)
       setIsOpen(false)
@@ -55,12 +52,8 @@ export default function NewVersion({ modId }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>New Version</DialogTitle>
-          <DialogDescription>
-            Upload a new version of your mod
-          </DialogDescription>
-          <DialogDescription className="text-destructive">
-            {!!error && error}
-          </DialogDescription>
+          <DialogDescription>Upload a new version of your mod</DialogDescription>
+          <DialogDescription className="text-destructive">{!!error && error}</DialogDescription>
         </DialogHeader>
         <Suspense
           fallback={
@@ -69,11 +62,7 @@ export default function NewVersion({ modId }: Props) {
             </div>
           }
         >
-          <UploadVersion
-            modId={modId}
-            onUploadSuccess={onUploadSuccess}
-            onError={setError}
-          />
+          <UploadVersion modId={modId} onUploadSuccess={onUploadSuccess} onError={setError} />
         </Suspense>
       </DialogContent>
     </Dialog>

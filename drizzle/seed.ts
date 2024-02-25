@@ -50,28 +50,23 @@ const mockUsers: MockId[] = await drizzleClient
     {
       userName: "Bocchi",
       name: "Hitori Gotoh",
-      avatarUrl:
-        "https://static.wikia.nocookie.net/bocchi-the-rock/images/6/67/Hitori_Gotoh_Profile.png",
+      avatarUrl: "https://static.wikia.nocookie.net/bocchi-the-rock/images/6/67/Hitori_Gotoh_Profile.png",
     },
     {
       userName: "Nijika Ijichi",
-      avatarUrl:
-        "https://static.wikia.nocookie.net/bocchi-the-rock/images/b/be/Nijika_Ijichi_Profile.png",
+      avatarUrl: "https://static.wikia.nocookie.net/bocchi-the-rock/images/b/be/Nijika_Ijichi_Profile.png",
     },
     {
       userName: "Ryo Yamada",
-      avatarUrl:
-        "https://static.wikia.nocookie.net/bocchi-the-rock/images/1/1d/Ryo_Yamada_Profile.png",
+      avatarUrl: "https://static.wikia.nocookie.net/bocchi-the-rock/images/1/1d/Ryo_Yamada_Profile.png",
     },
     {
       userName: "Ikuyo Kita",
-      avatarUrl:
-        "https://static.wikia.nocookie.net/bocchi-the-rock/images/7/7a/Ikuyo_Kita_Profile.png",
+      avatarUrl: "https://static.wikia.nocookie.net/bocchi-the-rock/images/7/7a/Ikuyo_Kita_Profile.png",
     },
     {
       userName: "Kikuri Hiroi",
-      avatarUrl:
-        "https://static.wikia.nocookie.net/bocchi-the-rock/images/8/88/Kikuri_Hiroi.png",
+      avatarUrl: "https://static.wikia.nocookie.net/bocchi-the-rock/images/8/88/Kikuri_Hiroi.png",
     },
   ])
   .returning()
@@ -93,8 +88,7 @@ const mockModVersion: MockId[] = await drizzleClient
     {
       modId: "Bocchi the Mod",
       version: "1.0.0",
-      downloadUrl:
-        "https://static.wikia.nocookie.net/bocchi-the-rock/images/3/32/Episode_2-3.png",
+      downloadUrl: "https://static.wikia.nocookie.net/bocchi-the-rock/images/3/32/Episode_2-3.png",
     },
   ])
   .returning()

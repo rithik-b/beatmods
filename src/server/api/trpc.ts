@@ -15,11 +15,7 @@ import { ZodError, z } from "zod"
 import drizzleClient from "../drizzleClient"
 import { and, eq } from "drizzle-orm"
 import { count } from "drizzle-orm"
-import {
-  githubUsersTable,
-  modsTable,
-  modContributorsTable,
-} from "@beatmods/types/dbSchema"
+import { githubUsersTable, modsTable, modContributorsTable } from "@beatmods/types/dbSchema"
 
 /**
  * 1. CONTEXT
@@ -35,27 +31,23 @@ import {
  */
 export const createTRPCContext = async (isSSR?: boolean) => {
   const cookieStore = cookies()
-  const supabase = createServerClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          if (isSSR) return
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          if (isSSR) return
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          cookieStore.set({ name, value: "", ...options })
-        },
+  const supabase = createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value
+      },
+      set(name: string, value: string, options: CookieOptions) {
+        if (isSSR) return
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        cookieStore.set({ name, value, ...options })
+      },
+      remove(name: string, options: CookieOptions) {
+        if (isSSR) return
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        cookieStore.set({ name, value: "", ...options })
       },
     },
-  )
+  })
   return {
     supabase,
   }
@@ -75,8 +67,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
       ...shape,
       data: {
         ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
+        zodError: error.cause instanceof ZodError ? error.cause.flatten() : null,
       },
     }
   },
@@ -114,11 +105,7 @@ export const authenticatedProcedure = publicProcedure.use(async (opts) => {
     })
 
   const user = (
-    await drizzleClient
-      .select()
-      .from(githubUsersTable)
-      .where(eq(githubUsersTable.authId, data.user.id))
-      .limit(1)
+    await drizzleClient.select().from(githubUsersTable).where(eq(githubUsersTable.authId, data.user.id)).limit(1)
   )?.[0]
 
   // This should never happen, but just in case
@@ -149,12 +136,7 @@ export const modContributorProcedure = authenticatedProcedure
       await drizzleClient
         .select({ count: count(modContributorsTable) })
         .from(modContributorsTable)
-        .where(
-          and(
-            eq(modContributorsTable.modId, opts.input.modId),
-            eq(modContributorsTable.userId, opts.ctx.user.id),
-          ),
-        )
+        .where(and(eq(modContributorsTable.modId, opts.input.modId), eq(modContributorsTable.userId, opts.ctx.user.id)))
     )?.[0]?.count
 
     if (!contributorsCount)

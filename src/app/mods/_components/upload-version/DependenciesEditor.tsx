@@ -6,15 +6,11 @@ import { type ComponentProps, useCallback, useRef } from "react"
 import { useFormContext } from "react-hook-form"
 import { type z } from "zod"
 
-type Props = Omit<
-  ComponentProps<typeof DependenciesEditorBase>,
-  "hasError" | "onFocus" | "onBlur" | "onValidate"
->
+type Props = Omit<ComponentProps<typeof DependenciesEditorBase>, "hasError" | "onFocus" | "onBlur" | "onValidate">
 
 export default function DependenciesEditor(props: Props) {
   const { error } = useFormField()
-  const { setError, clearErrors } =
-    useFormContext<z.infer<typeof NewVersionSchema>>()
+  const { setError, clearErrors } = useFormContext<z.infer<typeof NewVersionSchema>>()
   const errorRef = useRef<string | undefined>(undefined)
   const isFocusedRef = useRef(false)
 
@@ -28,8 +24,7 @@ export default function DependenciesEditor(props: Props) {
 
       errorRef.current = markers[0]!.message
       // Only set the error on the form when the editor is not focused
-      if (!isFocusedRef.current)
-        setError("dependencies", { message: errorRef.current })
+      if (!isFocusedRef.current) setError("dependencies", { message: errorRef.current })
     },
     [clearErrors, setError],
   )
@@ -47,12 +42,6 @@ export default function DependenciesEditor(props: Props) {
   }, [])
 
   return (
-    <DependenciesEditorBase
-      {...props}
-      hasError={!!error}
-      onValidate={onValidate}
-      onFocus={onFocus}
-      onBlur={onBlur}
-    />
+    <DependenciesEditorBase {...props} hasError={!!error} onValidate={onValidate} onFocus={onFocus} onBlur={onBlur} />
   )
 }

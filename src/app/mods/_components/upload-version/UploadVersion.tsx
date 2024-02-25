@@ -3,14 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { type z } from "zod"
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  Form,
-  FormMessage,
-} from "@beatmods/components/ui/form"
+import { FormControl, FormField, FormItem, FormLabel, Form, FormMessage } from "@beatmods/components/ui/form"
 import { Input } from "@beatmods/components/ui/input"
 import { useMemo, useState } from "react"
 import { Button } from "@beatmods/components/ui/button"
@@ -24,17 +17,11 @@ import { getTRPCErrorFromUnknown } from "@trpc/server"
 
 interface Props {
   modId: string
-  onUploadSuccess: (
-    modVersion: z.infer<typeof NewVersionSchema>,
-  ) => Promise<void>
+  onUploadSuccess: (modVersion: z.infer<typeof NewVersionSchema>) => Promise<void>
   onError: (error: string | undefined) => void
 }
 
-export default function UploadVersion({
-  modId,
-  onUploadSuccess,
-  onError,
-}: Props) {
+export default function UploadVersion({ modId, onUploadSuccess, onError }: Props) {
   const form = useForm<z.infer<typeof NewVersionSchema>>({
     resolver: zodResolver(NewVersionSchema),
     defaultValues: {
@@ -45,12 +32,9 @@ export default function UploadVersion({
     },
   })
   const [allGameVersions] = api.gameVersions.useSuspenseQuery()
-  const [selectedGameVersionIds, setSelectedGameVersionIds] = useState<
-    string[]
-  >([])
+  const [selectedGameVersionIds, setSelectedGameVersionIds] = useState<string[]>([])
   const [modFile, setModFile] = useState<File | undefined>(undefined)
-  const { mutateAsync: getUploadUrlAsync } =
-    api.mods.versions.getUploadUrl.useMutation()
+  const { mutateAsync: getUploadUrlAsync } = api.mods.versions.getUploadUrl.useMutation()
 
   const onSubmit = async (formData: z.infer<typeof NewVersionSchema>) => {
     if (!modFile) return
@@ -64,10 +48,7 @@ export default function UploadVersion({
         .uploadToSignedUrl(uploadUrl.data!.path, uploadUrl.data!.token, modFile)
 
       if (response.error) {
-        onError(
-          (response.error as { message: string } | undefined)?.message ??
-            "Mod upload failed",
-        )
+        onError((response.error as { message: string } | undefined)?.message ?? "Mod upload failed")
         return
       }
 
@@ -77,17 +58,11 @@ export default function UploadVersion({
     }
   }
 
-  const hasErrors = useMemo(
-    () => Object.keys(form.formState.errors).length > 0,
-    [form.formState],
-  )
+  const hasErrors = useMemo(() => Object.keys(form.formState.errors).length > 0, [form.formState])
 
   return (
     <Form {...form}>
-      <form
-        className="flex flex-col gap-5"
-        onSubmit={form.handleSubmit(onSubmit)}
-      >
+      <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(onSubmit)}>
         <FormField
           control={form.control}
           name="version"
@@ -139,11 +114,7 @@ export default function UploadVersion({
           )}
         />
         <ModDropzone setFile={setModFile} />
-        <Button
-          type="submit"
-          disabled={!modFile || hasErrors}
-          isLoading={form.formState.isSubmitting}
-        >
+        <Button type="submit" disabled={!modFile || hasErrors} isLoading={form.formState.isSubmitting}>
           Upload
         </Button>
       </form>

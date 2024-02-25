@@ -18,9 +18,7 @@ export default function Contributors({ contributors }: Props) {
             <GithubAvatar githubUser={c} key={c.id} />
           ))}
         </div>
-        <span className="text-md">
-          {contributors.map((c) => getNameForGithubUser(c)).join(" & ")}
-        </span>
+        <span className="text-md">{contributors.map((c) => getNameForGithubUser(c)).join(" & ")}</span>
       </div>
     )
   }

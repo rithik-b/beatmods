@@ -20,16 +20,9 @@ interface RemoveContributorsProps {
   onRemovalSuccess: () => void
 }
 
-export default function RemoveContributors({
-  modId,
-  contributors,
-  onRemovalSuccess,
-}: RemoveContributorsProps) {
+export default function RemoveContributors({ modId, contributors, onRemovalSuccess }: RemoveContributorsProps) {
   const { mutateAsync } = api.mods.removeModContributor.useMutation()
-  const isSingleContributor = useMemo(
-    () => contributors.length === 1,
-    [contributors],
-  )
+  const isSingleContributor = useMemo(() => contributors.length === 1, [contributors])
   function CloseCleanup() {
     clearTimeout(timerRef.current)
     setSelectedUser(null)
@@ -93,14 +86,11 @@ export default function RemoveContributors({
             <AlertDialogContent>
               <AlertDialogHeader>Remove Contributor?</AlertDialogHeader>
               <AlertDialogDescription>
-                {`Are you sure you want to remove ${getNameForGithubUser(
-                  selectedUser,
-                )} from the contributors?`}
+                {`Are you sure you want to remove ${getNameForGithubUser(selectedUser)} from the contributors?`}
                 <br />
                 {currentUser.data?.id === selectedUser.id ? (
                   <span className="text-destructive">
-                    You will lose access to this mod and won&apos;t be able to
-                    add yourself back!
+                    You will lose access to this mod and won&apos;t be able to add yourself back!
                   </span>
                 ) : (
                   "They can be added back afterwards"

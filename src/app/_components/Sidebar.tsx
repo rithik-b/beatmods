@@ -7,21 +7,9 @@ import Link from "next/link"
 import { type ReactNode } from "react"
 import ThemeToggle from "./ThemeToggle"
 
-function SidebarLink({
-  href,
-  children,
-  isSelected,
-}: {
-  href: string
-  children: ReactNode
-  isSelected: boolean
-}) {
+function SidebarLink({ href, children, isSelected }: { href: string; children: ReactNode; isSelected: boolean }) {
   return (
-    <Button
-      className="justify-start"
-      variant={isSelected ? "secondary" : "ghost"}
-      asChild
-    >
+    <Button className="justify-start" variant={isSelected ? "secondary" : "ghost"} asChild>
       <Link href={href} className="flex flex-row gap-2">
         {children}
       </Link>

@@ -18,13 +18,7 @@ export default function ModDropzone({ setFile }: Props) {
     return null
   }, [])
 
-  const {
-    acceptedFiles,
-    fileRejections,
-    getRootProps,
-    getInputProps,
-    isDragActive,
-  } = useDropzone({
+  const { acceptedFiles, fileRejections, getRootProps, getInputProps, isDragActive } = useDropzone({
     maxFiles: 1,
     multiple: false,
     accept: {
@@ -46,15 +40,12 @@ export default function ModDropzone({ setFile }: Props) {
       <div
         className={cn(
           "flex cursor-pointer justify-center rounded-md border p-5 transition-all hover:border-foreground hover:font-medium",
-          fileRejections.length > 0 &&
-            "border-destructive hover:border-red-600 hover:dark:border-red-500",
+          fileRejections.length > 0 && "border-destructive hover:border-red-600 hover:dark:border-red-500",
         )}
         {...getRootProps()}
       >
         <div className="flex gap-2">
-          <DropzoneContents
-            {...{ acceptedFiles, fileRejections, isDragActive }}
-          />
+          <DropzoneContents {...{ acceptedFiles, fileRejections, isDragActive }} />
         </div>
         <input {...getInputProps()} />
       </div>
@@ -89,11 +80,7 @@ function DropzoneContents(props: DropzoneContentsProps) {
   return (
     <>
       <FolderUp />
-      <span>
-        {isDragActive
-          ? "Drop here"
-          : "Drag and drop your mod here, or click to upload"}
-      </span>
+      <span>{isDragActive ? "Drop here" : "Drag and drop your mod here, or click to upload"}</span>
     </>
   )
 }

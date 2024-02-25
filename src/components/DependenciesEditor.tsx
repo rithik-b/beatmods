@@ -17,9 +17,7 @@ interface Props {
   onBlur?: () => void
 }
 
-function getSchemaPropertiesFromModVersions(
-  modVersions: Map<string, string[]>,
-) {
+function getSchemaPropertiesFromModVersions(modVersions: Map<string, string[]>) {
   const properties: Record<string, { type: string; enum: string[] }> = {}
   for (const modVersion of modVersions) {
     properties[modVersion[0]] = {
@@ -30,9 +28,7 @@ function getSchemaPropertiesFromModVersions(
   return properties
 }
 
-function convertDependenciesToEditorValue(
-  dependencies: z.infer<typeof Dependency>[],
-) {
+function convertDependenciesToEditorValue(dependencies: z.infer<typeof Dependency>[]) {
   if (dependencies.length === 0) return "{\n    \n}"
 
   const dependenciesObject: Record<string, string> = {}
@@ -60,13 +56,10 @@ export default function DependenciesEditor({
   onFocus,
   onBlur,
 }: Props) {
-  const { data } = api.mods.versions.getModsForGameVersions.useQuery(
-    gameVersionIds,
-    {
-      enabled: gameVersionIds.length > 0,
-      refetchOnMount: false,
-    },
-  )
+  const { data } = api.mods.versions.getModsForGameVersions.useQuery(gameVersionIds, {
+    enabled: gameVersionIds.length > 0,
+    refetchOnMount: false,
+  })
 
   const monaco = useMonaco()
   const { resolvedTheme } = useTheme()
@@ -134,8 +127,7 @@ export default function DependenciesEditor({
     (markers) => {
       if (!!onValidate) onValidate(markers)
 
-      if (markers.length === 0 && !!onChange && !!editorValue)
-        onChange(convertEditorValueToDependencies(editorValue))
+      if (markers.length === 0 && !!onChange && !!editorValue) onChange(convertEditorValueToDependencies(editorValue))
     },
     [editorValue, onChange, onValidate],
   )

@@ -2,25 +2,12 @@
 
 import { Button } from "@beatmods/components/ui/button"
 import { Input } from "@beatmods/components/ui/input"
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  Form,
-} from "@beatmods/components/ui/form"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, Form } from "@beatmods/components/ui/form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { type z } from "zod"
 import { useForm } from "react-hook-form"
 import { api, dontRetryOn404 } from "@beatmods/trpc/react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@beatmods/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@beatmods/components/ui/select"
 import { Suspense, useState } from "react"
 import { Loader2, Pencil } from "lucide-react"
 import {
@@ -61,8 +48,7 @@ function ModDetailsEditForm({ onSuccess, onError }: FormProps) {
       category: pendingMod?.category ?? mod.category,
     },
   })
-  const { mutateAsync: updateModDetails } =
-    api.mods.editModDetails.useMutation()
+  const { mutateAsync: updateModDetails } = api.mods.editModDetails.useMutation()
 
   const onSubmit = async (formData: z.infer<typeof EditModDetailsSchema>) => {
     onError(undefined)
@@ -76,10 +62,7 @@ function ModDetailsEditForm({ onSuccess, onError }: FormProps) {
 
   return (
     <Form {...form}>
-      <form
-        className="flex flex-col gap-5"
-        onSubmit={form.handleSubmit(onSubmit)}
-      >
+      <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(onSubmit)}>
         <FormField
           control={form.control}
           name="description"
@@ -87,16 +70,9 @@ function ModDetailsEditForm({ onSuccess, onError }: FormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="optional"
-                  {...field}
-                  value={field.value ?? ""}
-                  autoComplete="off"
-                />
+                <Input placeholder="optional" {...field} value={field.value ?? ""} autoComplete="off" />
               </FormControl>
-              <FormDescription>
-                Short description that will be shown on mod installers
-              </FormDescription>
+              <FormDescription>Short description that will be shown on mod installers</FormDescription>
             </FormItem>
           )}
         />
@@ -109,9 +85,7 @@ function ModDetailsEditForm({ onSuccess, onError }: FormProps) {
               <FormControl>
                 <Input {...field} autoComplete="off" />
               </FormControl>
-              <FormDescription>
-                E.g. link to the mod&apos;s repo
-              </FormDescription>
+              <FormDescription>E.g. link to the mod&apos;s repo</FormDescription>
             </FormItem>
           )}
         />
@@ -138,11 +112,7 @@ function ModDetailsEditForm({ onSuccess, onError }: FormProps) {
             </FormItem>
           )}
         />
-        <Button
-          type="submit"
-          isLoading={form.formState.isSubmitting}
-          className="w-full"
-        >
+        <Button type="submit" isLoading={form.formState.isSubmitting} className="w-full">
           Submit Changes
         </Button>
       </form>
@@ -176,9 +146,7 @@ export default function ModDetailsEditor() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit {mod.name}</DialogTitle>
-          <DialogDescription className="text-destructive">
-            {!!error && error}
-          </DialogDescription>
+          <DialogDescription className="text-destructive">{!!error && error}</DialogDescription>
         </DialogHeader>
         <Suspense
           fallback={

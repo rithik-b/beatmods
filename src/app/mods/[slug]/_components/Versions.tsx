@@ -1,13 +1,6 @@
 "use client"
 import { Button } from "@beatmods/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@beatmods/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@beatmods/components/ui/card"
 import { api } from "@beatmods/trpc/react"
 import { Download } from "lucide-react"
 import NewVersion from "./NewVersion"
@@ -35,10 +28,7 @@ export default function Versions({ modId, isContributor }: Props) {
                 For Beat Saber
                 <span className="flex flex-row gap-1">
                   {version.supportedGameVersions.map((v) => (
-                    <span
-                      key={v}
-                      className="rounded-full bg-primary px-2 py-1 text-sm text-primary-foreground"
-                    >
+                    <span key={v} className="rounded-full bg-primary px-2 py-1 text-sm text-primary-foreground">
                       {v}
                     </span>
                   ))}
@@ -47,22 +37,14 @@ export default function Versions({ modId, isContributor }: Props) {
             </CardHeader>
             <CardContent>
               {version.dependencies.length > 0 ? (
-                <>
-                  Dependencies:{" "}
-                  {version.dependencies
-                    .map((d) => `${d.id} ${d.version}`)
-                    .join(", ")}
-                </>
+                <>Dependencies: {version.dependencies.map((d) => `${d.id} ${d.version}`).join(", ")}</>
               ) : (
                 <span className="text-muted-foreground">No dependencies</span>
               )}
             </CardContent>
             <CardFooter>
               <Button asChild>
-                <a
-                  className="flex flex-row items-center gap-2"
-                  href={version.downloadUrl}
-                >
+                <a className="flex flex-row items-center gap-2" href={version.downloadUrl}>
                   <Download /> Download
                 </a>
               </Button>

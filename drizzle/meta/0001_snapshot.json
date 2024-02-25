@@ -35,9 +35,7 @@
         "Categories_name_key": {
           "name": "Categories_name_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       }
     },
@@ -73,9 +71,7 @@
         "GameVersions_version_key": {
           "name": "GameVersions_version_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "version"
-          ]
+          "columns": ["version"]
         }
       }
     },
@@ -122,12 +118,8 @@
           "tableFrom": "github_users",
           "tableTo": "users",
           "schemaTo": "auth",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -165,12 +157,8 @@
           "name": "mod_contributors_mod_id_mods_id_fk",
           "tableFrom": "mod_contributors",
           "tableTo": "mods",
-          "columnsFrom": [
-            "mod_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mod_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -178,12 +166,8 @@
           "name": "mod_contributors_user_id_github_users_id_fk",
           "tableFrom": "mod_contributors",
           "tableTo": "github_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -227,12 +211,8 @@
           "name": "mod_version_dependencies_mod_versions_id_mod_versions_id_fk",
           "tableFrom": "mod_version_dependencies",
           "tableTo": "mod_versions",
-          "columnsFrom": [
-            "mod_versions_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mod_versions_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -240,12 +220,8 @@
           "name": "mod_version_dependencies_dependency_id_mods_id_fk",
           "tableFrom": "mod_version_dependencies",
           "tableTo": "mods",
-          "columnsFrom": [
-            "dependency_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dependency_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -283,12 +259,8 @@
           "name": "mod_version_supported_game_versions_mod_version_id_mod_versions_id_fk",
           "tableFrom": "mod_version_supported_game_versions",
           "tableTo": "mod_versions",
-          "columnsFrom": [
-            "mod_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mod_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -296,12 +268,8 @@
           "name": "mod_version_supported_game_versions_game_version_id_game_versions_id_fk",
           "tableFrom": "mod_version_supported_game_versions",
           "tableTo": "game_versions",
-          "columnsFrom": [
-            "game_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["game_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -352,12 +320,8 @@
           "name": "mod_versions_mod_id_mods_id_fk",
           "tableFrom": "mod_versions",
           "tableTo": "mods",
-          "columnsFrom": [
-            "mod_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mod_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -419,12 +383,8 @@
           "name": "mods_category_categories_name_fk",
           "tableFrom": "mods",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category"
-          ],
-          "columnsTo": [
-            "name"
-          ],
+          "columnsFrom": ["category"],
+          "columnsTo": ["name"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -434,9 +394,7 @@
         "Mod_slug_key": {
           "name": "Mod_slug_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       }
     }

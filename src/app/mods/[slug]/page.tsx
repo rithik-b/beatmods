@@ -6,11 +6,7 @@ import ContributorsEditor from "./_components/contributors-editor/ContributorsEd
 import ModDetailsEditor from "./_components/details-editor/ModDetailsEditor"
 import { ModDetailsProvider } from "./_hooks/useModDetails"
 
-export default async function ModDetails({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function ModDetails({ params }: { params: { slug: string } }) {
   const { slug } = params
   try {
     const mod = await api.mods.modBySlug.query(slug)
@@ -37,19 +33,13 @@ export default async function ModDetails({
             <div className="flex h-8 flex-row items-center gap-2">
               <Contributors contributors={mod.contributors} />
               {isContributor && (
-                <ContributorsEditor
-                  modId={mod.id}
-                  modName={mod.name}
-                  contributors={mod.contributors}
-                />
+                <ContributorsEditor modId={mod.id} modName={mod.name} contributors={mod.contributors} />
               )}
             </div>
             {mod.description ? (
               <p className="text-lg">{mod.description}</p>
             ) : (
-              <p className="text-lg font-light italic">
-                No description provided.
-              </p>
+              <p className="text-lg font-light italic">No description provided.</p>
             )}
           </div>
           <Versions modId={mod.id} isContributor={isContributor} />

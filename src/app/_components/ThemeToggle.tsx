@@ -41,11 +41,7 @@ export default function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuRadioGroup
-          className="flex flex-col gap-2"
-          value={theme}
-          onValueChange={setTheme}
-        >
+        <DropdownMenuRadioGroup className="flex flex-col gap-2" value={theme} onValueChange={setTheme}>
           <DropdownMenuRadioItem className="flex flex-row gap-1" value="system">
             <Laptop className="h-4 w-4" />
             System

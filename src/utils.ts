@@ -26,16 +26,10 @@ export function getShortUsernameForAvatar(username: string): string {
 }
 
 export function getSupabaseBrowserClient() {
-  return createBrowserClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  )
+  return createBrowserClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 }
 
-export function diffObjects<T extends Record<string, unknown>>(
-  a: T,
-  b: T,
-): Partial<T> {
+export function diffObjects<T extends Record<string, unknown>>(a: T, b: T): Partial<T> {
   const diff: Partial<T> = {}
   for (const key in a) {
     if (a[key] !== b[key]) {

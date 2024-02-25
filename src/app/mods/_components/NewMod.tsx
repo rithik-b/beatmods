@@ -2,26 +2,13 @@
 
 import { Button } from "@beatmods/components/ui/button"
 import { Input } from "@beatmods/components/ui/input"
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  Form,
-} from "@beatmods/components/ui/form"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, Form } from "@beatmods/components/ui/form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { type z } from "zod"
 import { useForm } from "react-hook-form"
 import { api } from "@beatmods/trpc/react"
 import NewModSchema from "@beatmods/types/NewModSchema"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@beatmods/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@beatmods/components/ui/select"
 import { Suspense, useState } from "react"
 import { Loader2, Plus } from "lucide-react"
 import {
@@ -68,10 +55,7 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-5"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
         <FormField
           control={form.control}
           name="id"
@@ -107,9 +91,7 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
               <FormControl>
                 <Input placeholder="optional" {...field} autoComplete="off" />
               </FormControl>
-              <FormDescription>
-                Short description that will be shown on mod installers
-              </FormDescription>
+              <FormDescription>Short description that will be shown on mod installers</FormDescription>
             </FormItem>
           )}
         />
@@ -122,9 +104,7 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
               <FormControl>
                 <Input {...field} autoComplete="off" />
               </FormControl>
-              <FormDescription>
-                E.g. link to the mod&apos;s repo
-              </FormDescription>
+              <FormDescription>E.g. link to the mod&apos;s repo</FormDescription>
             </FormItem>
           )}
         />
@@ -151,11 +131,7 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
             </FormItem>
           )}
         />
-        <Button
-          type="submit"
-          isLoading={form.formState.isSubmitting}
-          className="w-full"
-        >
+        <Button type="submit" isLoading={form.formState.isSubmitting} className="w-full">
           Next
         </Button>
       </form>
@@ -166,15 +142,11 @@ function NewModForm({ onError, onSuccess }: NewModFormProps) {
 export default function NewMod() {
   const [isOpen, setIsOpen] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
-  const [modDetails, setModDetails] = useState<
-    z.infer<typeof NewModSchema> | undefined
-  >(undefined)
+  const [modDetails, setModDetails] = useState<z.infer<typeof NewModSchema> | undefined>(undefined)
   const { mutateAsync } = api.mods.createNew.useMutation()
   const router = useRouter()
 
-  const onUploadSuccess = async (
-    modVersion: z.infer<typeof NewVersionSchema>,
-  ) => {
+  const onUploadSuccess = async (modVersion: z.infer<typeof NewVersionSchema>) => {
     try {
       const response = await mutateAsync({
         mod: modDetails!,
@@ -203,9 +175,7 @@ export default function NewMod() {
         <DialogHeader>
           <DialogTitle>New Mod</DialogTitle>
           <DialogDescription>Create a new mod</DialogDescription>
-          <DialogDescription className="text-destructive">
-            {!!error && error}
-          </DialogDescription>
+          <DialogDescription className="text-destructive">{!!error && error}</DialogDescription>
         </DialogHeader>
         <Suspense
           fallback={
@@ -217,11 +187,7 @@ export default function NewMod() {
           {!modDetails ? (
             <NewModForm onError={setError} onSuccess={setModDetails} />
           ) : (
-            <UploadVersion
-              modId={modDetails.id}
-              onUploadSuccess={onUploadSuccess}
-              onError={setError}
-            />
+            <UploadVersion modId={modDetails.id} onUploadSuccess={onUploadSuccess} onError={setError} />
           )}
         </Suspense>
       </DialogContent>

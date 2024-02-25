@@ -1,9 +1,5 @@
 import type GithubUser from "@beatmods/types/GithubUser"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@beatmods/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@beatmods/components/ui/avatar"
 import { cn, getShortUsernameForAvatar } from "@beatmods/utils"
 import { getNameForGithubUser } from "@beatmods/types/GithubUser"
 import { cva } from "class-variance-authority"

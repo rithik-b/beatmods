@@ -6,12 +6,7 @@ import { useFormField } from "@beatmods/components/ui/form"
 
 type Props = Omit<
   ComponentProps<typeof TagInput<string>>,
-  | "placeholder"
-  | "inputValue"
-  | "setInputValue"
-  | "getLabel"
-  | "hasError"
-  | "children"
+  "placeholder" | "inputValue" | "setInputValue" | "getLabel" | "hasError" | "children"
 > & {
   allGameVersions: GameVersion[]
 }
@@ -26,9 +21,7 @@ export default function GameVersionInput(props: Props) {
       placeholder="Game Versions"
       inputValue={inputValue}
       setInputValue={setInputValue}
-      getLabel={(gameVersionId) =>
-        allGameVersions.find((v) => v.id === gameVersionId)!.version
-      }
+      getLabel={(gameVersionId) => allGameVersions.find((v) => v.id === gameVersionId)!.version}
       hasError={!!error}
       {...rest}
     >

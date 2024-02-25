@@ -3,13 +3,7 @@
 import Contributors from "@beatmods/components/Contributors"
 import { DataTable } from "@beatmods/components/ui/data-table"
 import { Input } from "@beatmods/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@beatmods/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@beatmods/components/ui/select"
 import { Skeleton } from "@beatmods/components/ui/skeleton"
 import type modsRouter from "@beatmods/server/api/routers/mods"
 import { api } from "@beatmods/trpc/react"
@@ -29,10 +23,7 @@ const columns: ColumnDef<ModColumns>[] = [
     cell: (props) => {
       if (props.row.original.id === props.row.original.name)
         return (
-          <Link
-            href={`/mods/${props.row.original.slug}`}
-            className="font-medium hover:underline"
-          >
+          <Link href={`/mods/${props.row.original.slug}`} className="font-medium hover:underline">
             {props.row.original.id}
           </Link>
         )
@@ -66,10 +57,7 @@ export default function ModsTable() {
     "gameVersion",
     withDefault(StringParam, gameVersions?.[0]?.version),
   )
-  const [searchQuery, setSearchQuery] = useQueryParam(
-    "search",
-    withDefault(StringParam, ""),
-  )
+  const [searchQuery, setSearchQuery] = useQueryParam("search", withDefault(StringParam, ""))
   const [search, setSearch] = useState(searchQuery)
   const debouncedSearch = useDebounce(search, 500)
   const { data: mods } = api.mods.getModsForListing.useQuery(
@@ -113,11 +101,7 @@ export default function ModsTable() {
             ))}
           </SelectContent>
         </Select>
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search"
-        />
+        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search" />
       </div>
       <DataTable columns={columns} data={mods} />
     </div>

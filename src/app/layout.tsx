@@ -13,11 +13,7 @@ export const metadata = {
   description: "Beat Saber",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <TRPCReactProvider cookies={cookies().toString()}>

@@ -3,13 +3,7 @@
 import GithubAvatar from "@beatmods/components/GithubAvatar"
 import { Button } from "@beatmods/components/ui/button"
 import { CommandItem } from "@beatmods/components/ui/command"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@beatmods/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@beatmods/components/ui/dialog"
 import TagInput from "@beatmods/components/ui/tag-input"
 import { api } from "@beatmods/trpc/react"
 import type GithubUser from "@beatmods/types/GithubUser"
@@ -23,11 +17,7 @@ interface Props {
   onAddSuccess: () => void
 }
 
-export default function AddContributors({
-  modId,
-  contributors,
-  onAddSuccess,
-}: Props) {
+export default function AddContributors({ modId, contributors, onAddSuccess }: Props) {
   const { mutateAsync } = api.mods.addModContributors.useMutation()
   const { data } = api.allUsers.useQuery()
   const [isOpen, setIsOpen] = useState(false)
@@ -87,10 +77,7 @@ export default function AddContributors({
           >
             {data
               .filter((u) => {
-                return (
-                  !selectedUsers.includes(u.id) &&
-                  !contributors.map((c) => c.id).includes(u.id)
-                )
+                return !selectedUsers.includes(u.id) && !contributors.map((c) => c.id).includes(u.id)
               })
               .map((user) => (
                 <CommandItem
@@ -103,18 +90,12 @@ export default function AddContributors({
                 >
                   <div className="flex flex-row items-center gap-x-2">
                     <GithubAvatar githubUser={user} size="small" />
-                    <span className="text-sm">
-                      {getNameForGithubUser(user)}
-                    </span>
+                    <span className="text-sm">{getNameForGithubUser(user)}</span>
                   </div>
                 </CommandItem>
               ))}
           </TagInput>
-          <Button
-            disabled={selectedUsers.length === 0}
-            isLoading={isLoading}
-            onClick={addUsers}
-          >
+          <Button disabled={selectedUsers.length === 0} isLoading={isLoading} onClick={addUsers}>
             Add
           </Button>
         </div>

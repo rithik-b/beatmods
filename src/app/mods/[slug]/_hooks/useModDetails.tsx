@@ -8,18 +8,8 @@ type ModDetails = inferRouterOutputs<typeof modsRouter>["modBySlug"]
 
 const ModDetailsContext = createContext<ModDetails | undefined>(undefined)
 
-export function ModDetailsProvider({
-  children,
-  mod,
-}: {
-  children: React.ReactNode
-  mod: ModDetails
-}) {
-  return (
-    <ModDetailsContext.Provider value={mod}>
-      {children}
-    </ModDetailsContext.Provider>
-  )
+export function ModDetailsProvider({ children, mod }: { children: React.ReactNode; mod: ModDetails }) {
+  return <ModDetailsContext.Provider value={mod}>{children}</ModDetailsContext.Provider>
 }
 
 export default function useModDetails() {
